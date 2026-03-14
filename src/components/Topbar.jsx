@@ -1,19 +1,57 @@
-import React from 'react';
-import { Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, LogIn, User } from 'lucide-react';
+import { supabase } from '../lib/supabase'; // Ensure this points to your supabase client
 
 const Topbar = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+        redirectTo: window.location.origin + '/auth/callback', // Point to your callback route
+        queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+        },
+        },
+    });
+    if (error) console.error('Error:', error.message);
+  };
+
   return (
     <header style={topBarStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <Shield color="#10b981" size={24} />
-        <h1 style={{ color: '#10b981', fontSize: '1.4rem', margin: 0, letterSpacing: '-0.5px' }}>
-          Vaultly
-        </h1>
+        <h1 style={{ color: '#10b981', fontSize: '1.4rem', margin: 0 }}>Vaultly</h1>
       </div>
-      <div style={statusDotContainer}>
-        <div style={statusDot}></div>
-        <span style={{ fontSize: '0.7rem', color: '#666' }}>SECURE</span>
-      </div>
+
+      {/* Login / Profile Toggle */}
+      {user ? (
+        <div style={statusDotContainer}>
+          <User size={18} color="#10b981" />
+          <span style={{ fontSize: '0.7rem', color: '#10b981' }}>{user.email?.split('@')[0]}</span>
+        </div>
+      ) : (
+        <button onClick={handleLogin} style={loginButtonStyle}>
+          <LogIn size={14} />
+          <span>Login</span>
+        </button>
+      )}
     </header>
   );
 };
@@ -32,7 +70,20 @@ const topBarStyle = {
   zIndex: 100
 };
 
+const loginButtonStyle = {
+  background: 'transparent',
+  border: '1px solid #10b981',
+  color: '#10b981',
+  padding: '6px 12px',
+  borderRadius: '8px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  fontSize: '0.75rem',
+  cursor: 'pointer',
+  transition: 'all 0.2s'
+};
+
 const statusDotContainer = { display: 'flex', alignItems: 'center', gap: '6px' };
-const statusDot = { width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 8px #10b981' };
 
 export default Topbar;
