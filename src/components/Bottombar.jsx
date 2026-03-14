@@ -12,8 +12,8 @@ const Bottombar = ({ activeTab, setActiveTab }) => {
       />
       <TabItem 
         icon={<Shield size={22}/>} 
-        label="Vault" 
-        active={activeTab === 'Vault'} 
+        label="Leo" 
+        active={activeTab === 'Leo'} 
         onClick={() => setActiveTab('Vault')} 
       />
       <TabItem 

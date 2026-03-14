@@ -6,7 +6,7 @@ import Bottombar from './components/Bottombar';
 
 // Page Components
 import Home from './pages/Home';
-import Vault from './pages/Vault';
+import Leo from './pages/Leo';
 import Archive from './pages/Archive';
 import Profile from './pages/Profile';
 
@@ -22,7 +22,7 @@ function App() {
 
         <main style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'Home' && <Home userName={userName} />}
-          {activeTab === 'Vault' && <Vault />}
+          {activeTab === 'Leo' && <Leo />}
           {activeTab === 'Archive' && <Archive />}
           {activeTab === 'Profile' && <Profile userName={userName} />}
         </main>
