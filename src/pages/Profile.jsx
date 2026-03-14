@@ -1,18 +1,15 @@
 import React from 'react';
 import { User } from 'lucide-react';
-import { supabase } from '../lib/supabase'; // Ensure this points to your client
-import { useNavigate } from 'react-router-dom'; // Assuming you use react-router
+import { supabase } from '../lib/supabase';
 
 const Profile = ({ userName }) => {
-  const navigate = useNavigate();
-
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      await supabase.auth.signOut();
+      // Force a full page reload to clear all React state
+      window.location.href = "/";
+    } catch (error) {
       console.error("Error signing out:", error.message);
-    } else {
-      // Redirect to login or home page after logout
-      navigate('/'); 
     }
   };
 
@@ -27,7 +24,6 @@ const Profile = ({ userName }) => {
       <div style={{ marginTop: '30px', textAlign: 'left' }}>
         <div style={menuItem}>Security Settings</div>
         <div style={menuItem}>Linked Devices</div>
-        {/* Added the onClick handler here */}
         <div 
           onClick={handleLogout} 
           style={{ ...menuItem, color: '#ef4444', border: 'none', fontWeight: 'bold' }}
