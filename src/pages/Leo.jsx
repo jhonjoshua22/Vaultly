@@ -1,26 +1,53 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, Brain, TrendingUp, Wallet, Sparkles } from "lucide-react";
+import { supabase } from "../lib/supabase"; // Ensure this path is correct
 
 const Leo = () => {
   const [message, setMessage] = useState("");
-  const [chat, setChat] = useState([
-    { role: "leo", text: "Hi! I'm Leo. Ask me anything about your spending." }
-  ]);
+  const [chat, setChat] = useState([]);
+  const [totalSpent, setTotalSpent] = useState(0);
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    loadChatAndStats();
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  const sendMessage = () => {
+  const loadChatAndStats = async () => {
+    // 1. Fetch Chat History
+    const { data: chatData } = await supabase
+      .from('chat_history')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (chatData) setChat(chatData.map(c => ({ role: c.role, text: c.message })));
+
+    // 2. Fetch Expenses for Insights
+    const { data: expenses } = await supabase.from('expenses').select('amount');
+    const total = expenses?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
+    setTotalSpent(total);
+  };
+
+  const sendMessage = async () => {
     if (!message.trim()) return;
-    setChat([...chat, { role: "user", text: message }, { role: "leo", text: "Analyzing your budget..." }]);
+
+    const userMsg = message;
     setMessage("");
+    
+    // Add User message to UI and DB
+    setChat(prev => [...prev, { role: "user", text: userMsg }]);
+    await supabase.from('chat_history').insert([{ role: 'user', message: userMsg }]);
+
+    // Simulate Leo AI response
+    const leoResponse = "I've analyzed your spending. You're doing great keeping to your budget today!";
+    setChat(prev => [...prev, { role: "leo", text: leoResponse }]);
+    await supabase.from('chat_history').insert([{ role: 'leo', message: leoResponse }]);
   };
 
   return (
     <div style={mobilePageStyle}>
-      {/* Primary Interaction: Chat at the Top */}
       <div style={chatContainerStyle}>
         <div style={chatHeaderStyle}>
           <Sparkles size={16} color="#10b981" /> <span>Leo AI Assistant</span>
@@ -39,25 +66,23 @@ const Leo = () => {
         </div>
       </div>
 
-      {/* Secondary Information: Insights & Stats */}
       <div style={dashboardSectionStyle}>
         <div style={cardStyle}>
           <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
             <Brain size={18} color="#10b981" /> <strong>Leo Insight</strong>
           </div>
-          <p style={{fontSize: '0.85rem', opacity: 0.8}}>Most spending today was on <strong>Food</strong>. You're trending +12% higher than yesterday.</p>
+          <p style={{fontSize: '0.85rem', opacity: 0.8}}>Total expenditure tracked in your database: <strong>${totalSpent}</strong>.</p>
         </div>
-
         <div style={statsRowStyle}>
-          <div style={miniStatStyle}><Wallet size={16} color="#10b981" /> <span>Spent</span> <strong>$40</strong></div>
-          <div style={miniStatStyle}><TrendingUp size={16} color="#10b981" /> <span>Trend</span> <strong style={{color: '#ef4444'}}>+12%</strong></div>
+          <div style={miniStatStyle}><Wallet size={16} color="#10b981" /> <span>Spent</span> <strong>${totalSpent}</strong></div>
+          <div style={miniStatStyle}><TrendingUp size={16} color="#10b981" /> <span>Trend</span> <strong>Active</strong></div>
         </div>
       </div>
     </div>
   );
 };
 
-/* Mobile-First Optimized Styles */
+/* Styles remain same as your previous version */
 const mobilePageStyle = { display: 'flex', flexDirection: 'column', height: '100vh', padding: '10px', gap: '15px' };
 const chatContainerStyle = { flex: 1, background: '#111', borderRadius: '20px', display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid #222' };
 const chatHeaderStyle = { padding: '15px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontWeight: 'bold' };
