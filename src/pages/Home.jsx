@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Bell, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { supabase } from "../lib/supabase"; 
 
 const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
@@ -9,7 +9,6 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
 
-  // 1. Fetch data from Supabase on mount
   useEffect(() => {
     fetchLogs();
   }, []);
@@ -24,12 +23,10 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
     else setLogs(data || []);
   };
 
-  // 2. Add spend to Supabase
   const addSpend = async () => {
     if (!amount || !desc) return;
     
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
         alert("You must be logged in to save!");
         return;
@@ -38,9 +35,9 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
     const { data, error } = await supabase
         .from('expenses')
         .insert([{ 
-        amount: Number(amount), 
-        description: desc,
-        user_id: user.id 
+          amount: Number(amount), 
+          description: desc,
+          user_id: user.id
         }])
         .select();
 
@@ -48,12 +45,12 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
         console.error("Supabase Error:", error);
         alert("Failed to save: " + error.message);
     } else {
-        setLogs([data[0], ...logs]);
+        // Refresh the list to ensure we get the created_at from the DB
+        fetchLogs(); 
         setAmount(""); setDesc(""); setShowAdd(false);
     }
   };
 
-  // 3. Delete from Supabase
   const deleteLog = async (id) => {
     const { error } = await supabase.from('expenses').delete().eq('id', id);
     if (!error) setLogs(logs.filter((l) => l.id !== id));
@@ -80,7 +77,6 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
 
       <button style={addBtn} onClick={() => setShowAdd(true)}><Plus size={18} /> Add Spend</button>
 
-      {/* Modal remains the same */}
       {showAdd && (
         <div style={overlayStyle}>
           <div style={modal}>
@@ -102,6 +98,12 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
             <span>{log.description}</span>
             <strong>${log.amount}</strong>
           </div>
+          
+          {/* Date display added here */}
+          <div style={{ fontSize: '0.7rem', opacity: 0.5, marginTop: '5px' }}>
+            {log.created_at ? new Date(log.created_at).toLocaleString() : 'Just now'}
+          </div>
+
           {expandedId === log.id && (
             <div style={expandedDetailsStyle}>
               <button style={deleteBtnStyle} onClick={(e) => { e.stopPropagation(); deleteLog(log.id); }}>
@@ -115,7 +117,7 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
   );
 };
 
-/* --- Styles (Use the ones you already have) --- */
+/* --- Styles --- */
 const pageStyle = { padding: "20px", maxWidth: "600px", margin: "auto" };
 const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "25px", alignItems: "center" };
 const avatarStyle = { width: "60px", height: "60px", borderRadius: "50%", background: "linear-gradient(45deg,#10b981,#064e3b)" };
