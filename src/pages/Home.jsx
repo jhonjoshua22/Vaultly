@@ -28,20 +28,28 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
   const addSpend = async () => {
     if (!amount || !desc) return;
     
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+        alert("You must be logged in to save!");
+        return;
+    }
+
     const { data, error } = await supabase
-      .from('expenses')
-      .insert([{ 
+        .from('expenses')
+        .insert([{ 
         amount: Number(amount), 
         description: desc,
-        user_id: (await supabase.auth.getUser()).data.user?.id 
-      }])
-      .select();
+        user_id: user.id 
+        }])
+        .select();
 
     if (error) {
-      console.error("Error adding:", error);
+        console.error("Supabase Error:", error);
+        alert("Failed to save: " + error.message);
     } else {
-      setLogs([data[0], ...logs]);
-      setAmount(""); setDesc(""); setShowAdd(false);
+        setLogs([data[0], ...logs]);
+        setAmount(""); setDesc(""); setShowAdd(false);
     }
   };
 
