@@ -20,7 +20,7 @@ function App() {
         
         <Topbar />
 
-        <main style={{ flex: 1, overflowY: 'auto' }}>
+        <main className="page-transition" style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'Home' && <Home userName={userName} />}
           {activeTab === 'Vault' && <Vault />}
           {activeTab === 'Archive' && <Archive />}
