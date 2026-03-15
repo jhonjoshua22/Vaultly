@@ -131,6 +131,16 @@ input, select, textarea {
   -webkit-text-size-adjust: 100%; /* ensure mobile scaling */
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* --- Added Component Styles --- */
 .page-container { padding: 20px; max-width: 600px; margin: auto; color: var(--text-h); }
 .card { background: var(--code-bg); padding: 20px; borderRadius: 18px; border: 1px solid var(--border); }
