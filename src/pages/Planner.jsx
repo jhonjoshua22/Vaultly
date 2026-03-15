@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, Trash2, Calendar, DollarSign, FileText } from 'lucide-react';
+import { Plus, ChevronLeft, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const Planner = () => {
@@ -42,17 +42,16 @@ const Planner = () => {
         
         <input placeholder="Title" style={titleInput} value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
         
-        {/* Unified Input UI Wrapper */}
-        <div style={inputRowStyle}><DollarSign size={18} color="#888" /> 
-            <input type="number" placeholder="Amount" style={inputStyle} value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
+        <div style={inputRowStyle}>
+            <input type="number" placeholder="Amount" style={centeredInputStyle} value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
         </div>
         
-        <div style={inputRowStyle}><Calendar size={18} color="#888" />
-            <input type="date" placeholder="Date" style={inputStyle} value={formData.plan_date} onChange={e => setFormData({...formData, plan_date: e.target.value})} />
+        <div style={inputRowStyle}>
+            <input type="date" placeholder="Date" style={centeredInputStyle} value={formData.plan_date} onChange={e => setFormData({...formData, plan_date: e.target.value})} />
         </div>
 
-        <div style={textAreaRowStyle}><FileText size={18} color="#888" style={{ marginTop: '5px' }} />
-            <textarea placeholder="Details..." style={textAreaStyle} value={formData.text} onChange={e => setFormData({...formData, text: e.target.value})} />
+        <div style={inputRowStyle}>
+            <textarea placeholder="Details..." style={centeredTextAreaStyle} value={formData.text} onChange={e => setFormData({...formData, text: e.target.value})} />
         </div>
 
         <button onClick={savePlan} style={saveBtn}>Save Note</button>
@@ -70,8 +69,8 @@ const Planner = () => {
       </div>
       {plans.map(p => (
         <div key={p.id} onClick={() => { setEditingId(p.id); setFormData(p); setView('editor'); }} style={listItemStyle}>
-          <div style={{ fontWeight: '600', color: '#fff' }}>{p.title || 'Untitled'}</div>
-          <div style={{ fontSize: '0.85rem', color: '#888' }}>{p.plan_date} • ${p.amount || 0}</div>
+          <div style={{ fontWeight: '600', color: '#fff', textAlign: 'center' }}>{p.title || 'Untitled'}</div>
+          <div style={{ fontSize: '0.85rem', color: '#888', textAlign: 'center' }}>{p.plan_date} • ${p.amount || 0}</div>
         </div>
       ))}
     </div>
@@ -79,14 +78,13 @@ const Planner = () => {
 };
 
 /* Updated Styles */
-const inputRowStyle = { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#1c1c1e', borderRadius: '12px', marginBottom: '10px' };
-const textAreaRowStyle = { ...inputRowStyle, alignItems: 'flex-start' };
+const inputRowStyle = { padding: '12px', background: '#1c1c1e', borderRadius: '12px', marginBottom: '10px' };
 const listItemStyle = { padding: '20px', background: '#1c1c1e', borderRadius: '16px', marginBottom: '12px', cursor: 'pointer' };
 const addBtnStyle = { background: 'none', border: 'none', color: '#10b981', cursor: 'pointer' };
 const navBtn = { background: 'none', border: 'none', color: '#10b981', display: 'flex', alignItems: 'center', cursor: 'pointer' };
-const titleInput = { width: '100%', fontSize: '1.8rem', background: 'transparent', border: 'none', color: '#fff', marginBottom: '20px', outline: 'none' };
-const inputStyle = { flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem', outline: 'none', textAlign: 'left', padding: '0',  };
-const textAreaStyle = { flex: 1, height: '150px', background: 'transparent', border: 'none', color: '#ccc', fontSize: '1rem', resize: 'none', outline: 'none' };
+const titleInput = { width: '100%', fontSize: '1.8rem', background: 'transparent', border: 'none', color: '#fff', marginBottom: '20px', outline: 'none', textAlign: 'center' };
+const centeredInputStyle = { width: '100%', background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem', outline: 'none', textAlign: 'center' };
+const centeredTextAreaStyle = { width: '100%', height: '150px', background: 'transparent', border: 'none', color: '#ccc', fontSize: '1rem', resize: 'none', outline: 'none', textAlign: 'center' };
 const saveBtn = { width: '100%', marginTop: '20px', padding: '15px', background: '#10b981', border: 'none', borderRadius: '12px', color: '#000', fontWeight: 'bold', cursor: 'pointer' };
 
 export default Planner;
