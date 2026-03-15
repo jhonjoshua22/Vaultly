@@ -42,13 +42,24 @@ const Planner = () => {
         
         <input placeholder="Title" style={titleInput} value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
         
-        {/* Unified Input UI Wrapper */}
         <div style={inputRowStyle}><DollarSign size={18} color="#888" /> 
             <input type="number" placeholder="Amount" style={inputStyle} value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
         </div>
         
-        <div style={inputRowStyle}><Calendar size={18} color="#888" />
-            <input type="date" placeholder="Date" style={inputStyle} value={formData.plan_date} onChange={e => setFormData({...formData, plan_date: e.target.value})} />
+        {/* Custom Date Display Container */}
+        <div style={{ ...inputRowStyle, position: 'relative' }}>
+            <Calendar size={18} color="#888" />
+            <span style={{ color: formData.plan_date ? '#fff' : '#888', marginLeft: '12px' }}>
+                {formData.plan_date || "Select Date"}
+            </span>
+            {/* Invisible Date Input Overlay */}
+            <input 
+                type="date" 
+                placeholder="Date"
+                style={dateOverlayStyle} 
+                value={formData.plan_date} 
+                onChange={e => setFormData({...formData, plan_date: e.target.value})} 
+            />
         </div>
 
         <div style={textAreaRowStyle}><FileText size={18} color="#888" style={{ marginTop: '5px' }} />
@@ -78,15 +89,18 @@ const Planner = () => {
   );
 };
 
-/* Updated Styles */
-const inputRowStyle = { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#1c1c1e', borderRadius: '12px', marginBottom: '10px' };
+/* Styles */
+const inputRowStyle = { display: 'flex', alignItems: 'center', padding: '12px', background: '#1c1c1e', borderRadius: '12px', marginBottom: '10px' };
 const textAreaRowStyle = { ...inputRowStyle, alignItems: 'flex-start' };
+const dateOverlayStyle = { 
+    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' 
+};
 const listItemStyle = { padding: '20px', background: '#1c1c1e', borderRadius: '16px', marginBottom: '12px', cursor: 'pointer' };
 const addBtnStyle = { background: 'none', border: 'none', color: '#10b981', cursor: 'pointer' };
 const navBtn = { background: 'none', border: 'none', color: '#10b981', display: 'flex', alignItems: 'center', cursor: 'pointer' };
 const titleInput = { width: '100%', fontSize: '1.8rem', background: 'transparent', border: 'none', color: '#fff', marginBottom: '20px', outline: 'none' };
-const inputStyle = { flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem', outline: 'none', textAlign: 'left', padding: '0',  };
-const textAreaStyle = { flex: 1, height: '150px', background: 'transparent', border: 'none', color: '#ccc', fontSize: '1rem', resize: 'none', outline: 'none' };
+const inputStyle = { flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem', outline: 'none', marginLeft: '12px' };
+const textAreaStyle = { flex: 1, height: '150px', background: 'transparent', border: 'none', color: '#ccc', fontSize: '1rem', resize: 'none', outline: 'none', marginLeft: '12px' };
 const saveBtn = { width: '100%', marginTop: '20px', padding: '15px', background: '#10b981', border: 'none', borderRadius: '12px', color: '#000', fontWeight: 'bold', cursor: 'pointer' };
 
 export default Planner;
