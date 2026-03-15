@@ -65,6 +65,8 @@ function App() {
           {activeTab === 'Leo' && <Leo />}
           {activeTab === 'Planner' && <Planner />}
           {activeTab === 'Profile' && <Profile />}
+
+          {window.location.pathname.startsWith('/planner/') && <PlannerEditor />}
         </main>
         <Bottombar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
