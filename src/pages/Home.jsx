@@ -10,12 +10,14 @@ const Home = () => {
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(true);
+  const [friendsLogs, setFriendsLogs] = useState([]);
   
   // Initialize with today's date in YYYY-MM-DD format
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
   const init = async () => {
+    fetchFriendsActivity();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false); // Stop loading, but do not redirect!
@@ -40,6 +42,30 @@ const Home = () => {
       dailyLimit: data.daily_limit || 150 
     });
   };
+
+  const fetchFriendsActivity = async () => {
+  // Query friend_logs based on friendships linked to current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // 1. Get friend IDs
+  const { data: friends } = await supabase
+    .from('friendships')
+    .select('id, friend_name')
+    .eq('user_id', user.id);
+
+  if (friends && friends.length > 0) {
+    const friendIds = friends.map(f => f.id);
+    
+    // 2. Fetch logs for these friendships
+    const { data: logs } = await supabase
+      .from('friend_logs')
+      .select('*')
+      .in('friendship_id', friendIds)
+      .order('time_logged', { ascending: false });
+      
+    setFriendsLogs(logs || []);
+  }
+};
 
   const fetchLogs = async (dateStr) => {
     // Define start and end of the selected day for the query
@@ -83,6 +109,13 @@ const Home = () => {
 
   const totalSpent = logs.reduce((acc, curr) => acc + Number(curr.amount), 0);
   const remaining = profile.dailyLimit - totalSpent;
+
+  const notifyFriend = async (friendId, name) => {
+    const msg = "Hey! Keep an eye on your budget today! 💸";
+    // You can insert this into a 'notifications' table if you created one, 
+    // or use a simple alert for now.
+    alert(`Message sent to ${name}: ${msg}`);
+  };
 
   return (
     <div style={pageStyle}>
@@ -131,6 +164,22 @@ const Home = () => {
               </button>
             </div>
           )}
+        </div>
+      ))}
+
+      <h3 style={{ marginTop: "40px" }}>Friends' Activity</h3>
+      {friendsLogs.map((log) => (
+        <div key={log.id} style={logItemStyle}>
+          <div style={logHeaderStyle}>
+            <span>Friend: {log.description}</span>
+            <strong>${log.amount}</strong>
+          </div>
+          <button 
+            onClick={() => notifyFriend(log.friendship_id, log.description)}
+            style={{ ...addBtn, marginTop: '10px', background: '#3b82f6' }}
+          >
+            Notify Friend
+          </button>
         </div>
       ))}
       
