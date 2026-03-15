@@ -49,13 +49,12 @@ const Planner = () => {
         {/* Custom Date Display Container */}
         <div style={{ ...inputRowStyle, position: 'relative' }}>
             <Calendar size={18} color="#888" />
-            <span style={{ color: formData.plan_date ? '#fff' : '#888' }}>
+            <span style={{ color: formData.plan_date ? '#fff' : '#888', marginLeft: '14px' }}>
                 {formData.plan_date || "Select Date"}
             </span>
             {/* Invisible Date Input Overlay */}
             <input 
                 type="date" 
-                placeholder="Date"
                 style={dateOverlayStyle} 
                 value={formData.plan_date} 
                 onChange={e => setFormData({...formData, plan_date: e.target.value})} 
