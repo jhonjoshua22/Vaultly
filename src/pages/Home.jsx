@@ -171,11 +171,8 @@ const Home = () => {
          Add Spend
       </button>
 
-      <div style={{ marginTop: 25, display: "flex", gap: 10 }}>
-        <input type="date" value={filterDate} onChange={(e) => { setFilterDate(e.target.value); fetchLogs(e.target.value); }} style={dateInputStyle}/>
-      </div>
-
-      <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}/>
+      <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}
+      filterDate={filterDate} setFilterDate={setFilterDate} fetchLogs={fetchLogs}/>
       <FriendList friendsLogs={friendsLogs}/>
       {friendsLogs.length === 0 && <p style={{opacity:0.5}}>No friends activity yet.</p>}
 
