@@ -45,7 +45,7 @@ const Planner = () => {
         
         {/* Date Input with Calendar Icon for iOS visibility */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', borderBottom: '1px solid #333', paddingBottom: '5px' }}>
-          <Calendar size={18} color="#10b981" />
+          Date
           <input 
             type="date" 
             style={{ ...inputStyle, marginBottom: 0, border: 'none' }} 
