@@ -214,6 +214,9 @@ const Home = () => {
       />
 
       <FriendList friendsLogs={friendsLogs} />
+      {friendsLogs.length === 0 && (
+          <p style={{opacity:0.5}}>No friends activity yet.</p>
+      )}
 
       {showAdd && (
         <AddSpendModal
