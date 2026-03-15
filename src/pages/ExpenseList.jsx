@@ -15,8 +15,7 @@ const ExpenseList = ({
       <h3 style={{ marginTop: "20px" }}>Activity</h3>
 
       {/* Calendar Filter UI */}
-      <div style={{ marginTop: "25px", display: "flex", alignItems: "center", gap: "10px" }}>
-        <Calendar size={18} color="#10b981" />
+      <div style={{ marginTop: "25px", marginBottom: "25px", display: "flex", alignItems: "center", gap: "10px" }}>
         <input 
           type="date" 
           value={filterDate} 
