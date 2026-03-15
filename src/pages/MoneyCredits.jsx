@@ -42,7 +42,7 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
       <h3>Money & Credits Balance</h3>
 
       {/* MONEY */}
-      <p style={sectionTitle}>My Money</p>
+      <p style={{...sectionTitle, marginBottom: 10}}>My Money</p>
       <div style={grid}>
         {["gcash","cash","bdoSavings"].map(acc => (
           <div
@@ -61,7 +61,7 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
       </div>
 
       {/* CREDIT */}
-      <p style={{ ...sectionTitle, marginTop: 20 }}>Credit Balance</p>
+      <p style={{ ...sectionTitle, marginTop: 20, marginBottom: 10 }}>Credit Balance</p>
       <div style={grid}>
         {["bdoCredit","eastwestCredit"].map(acc => (
           <div
@@ -82,7 +82,6 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
       <div style={totalCard}>
         <p>Total Money</p>
         <h2>${netTotal}</h2>
-        <small>(${moneyTotal} money - ${creditTotal} credit)</small>
       </div>
 
       {/* EDIT MODAL */}
