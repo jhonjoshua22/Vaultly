@@ -18,8 +18,6 @@ const Home = () => {
         window.location.href = "/";
         return;
       }
-      
-      // Fetch profile and logs
       fetchProfile(user.id);
       fetchLogs();
       setLoading(false);
@@ -41,9 +39,15 @@ const Home = () => {
   };
 
   const fetchLogs = async () => {
+    // Get the start of the current day (00:00:00) in the local timezone
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfToday = today.toISOString();
+
     const { data, error } = await supabase
       .from('expenses')
       .select('*')
+      .gte('created_at', startOfToday) // Only show records from today onwards
       .order('created_at', { ascending: false });
     
     if (error) console.error("Error fetching:", error);
