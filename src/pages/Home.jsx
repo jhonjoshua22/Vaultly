@@ -10,22 +10,11 @@ const Home = () => {
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        window.location.href = "/";
-        return;
-      }
-      fetchProfile(user.id);
-      fetchLogs();
-      setLoading(false);
-    };
-    init();
-  }, []);
 
-  const fetchProfile = async (userId) => {
+    const fetchProfile = async (userId) => {
     const { data } = await supabase
       .from('profiles')
       .select('first_name, daily_limit')
@@ -38,7 +27,7 @@ const Home = () => {
     });
   };
 
-  const fetchLogs = async () => {
+    const fetchLogs = async () => {
     // Get the start of the current day (00:00:00) in the local timezone
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -53,6 +42,19 @@ const Home = () => {
     if (error) console.error("Error fetching:", error);
     else setLogs(data || []);
   };
+
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = "/";
+        return;
+      }
+      fetchProfile(user.id);
+      fetchLogs();
+      setLoading(false);
+    };
+    init();
+  }, []);
 
   const addSpend = async () => {
     if (!amount || !desc) return;
@@ -79,6 +81,21 @@ const Home = () => {
 
   const totalSpent = logs.reduce((acc, curr) => acc + Number(curr.amount), 0);
   const remaining = profile.dailyLimit - totalSpent;
+  
+  const fetchLogs = async (includeAll = false) => {
+  let query = supabase.from('expenses').select('*');
+  
+  if (!includeAll) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    query = query.gte('created_at', today.toISOString());
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+  
+  if (error) console.error("Error fetching:", error);
+  else setLogs(data || []);
+};
 
   return (
     <div style={pageStyle}>
@@ -109,6 +126,20 @@ const Home = () => {
           </div>
         </div>
       )}
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '25px' }}>
+        <h3>Your Activity</h3>
+        <button 
+          style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '0.8rem' }}
+          onClick={() => {
+            const nextShowAll = !showAll;
+            setShowAll(nextShowAll);
+            fetchLogs(nextShowAll);
+          }}
+        >
+          {showAll ? "Show Today Only" : "Show All History"}
+        </button>
+      </div>
 
       <h3 style={{ marginTop: "25px" }}>Your Activity</h3>
       {logs.map((log) => (
