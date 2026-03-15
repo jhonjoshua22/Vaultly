@@ -1,11 +1,10 @@
 import React from "react";
-import heroGif from "../assets/hero.gif"; // Import your GIF
+import heroGif from "../assets/hero.gif";
 
 const UserStats = ({ profile, remaining, totalSpent, filterDate }) => {
   return (
     <>
       <div style={headerSectionStyle}>
-        {/* Replaced the div background with an img tag */}
         <img src={heroGif} alt="User Avatar" style={avatarStyle} />
         
         <p style={greetingStyle}>
@@ -26,11 +25,10 @@ const UserStats = ({ profile, remaining, totalSpent, filterDate }) => {
 const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "25px", alignItems: "center" };
 
 const avatarStyle = { 
-  width: "60px", 
-  height: "60px", 
+  width: "20vh", 
+  height: "20vh", 
   borderRadius: "50%", 
-  objectFit: "cover", // Ensures the GIF fills the circle nicely
-  border: "2px solid #10b981" // Optional: adds a nice border to match your theme
+  objectFit: "cover"
 };
 
 const greetingStyle = { fontSize: "0.9rem", lineHeight: "1.4" };
