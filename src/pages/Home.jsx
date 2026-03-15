@@ -61,14 +61,19 @@ const Home = () => {
 
   // --- Fetch Expenses
   const fetchLogs = async (dateStr) => {
-    const start = new Date(dateStr); start.setHours(0,0,0,0);
-    const end = new Date(dateStr); end.setHours(23,59,59,999);
+    // Force the query to use PHT (UTC+8)
+    // 00:00:00.000+08:00 is the start of the day in Philippines
+    // 23:59:59.999+08:00 is the end of the day in Philippines
+    const start = `${dateStr}T00:00:00.000+08:00`;
+    const end = `${dateStr}T23:59:59.999+08:00`;
+
     const { data } = await supabase
       .from("expenses")
       .select("*")
-      .gte("created_at", start.toISOString())
-      .lte("created_at", end.toISOString())
+      .gte("created_at", start)
+      .lte("created_at", end)
       .order("created_at", { ascending: false });
+    
     setLogs(data || []);
   };
 
