@@ -128,7 +128,7 @@ const card = {
     cursor: "pointer",
     backgroundSize: "cover",
     backgroundPosition: "center",
-    aspectRatio: "1.3/1",
+    aspectRatio: "1.5/1",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center"
