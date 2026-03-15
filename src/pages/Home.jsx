@@ -105,42 +105,64 @@ const Home = () => {
   };
 
   /* --- Add Spend with Payment Method --- */
+  // Inside Home.jsx
   const addSpend = async (paymentMethod) => {
     if (!amount || !desc) return;
     const amountNum = Number(amount);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase
+    // 1️⃣ Insert spend
+    await supabase
       .from("expenses")
-      .insert([
-        {
-          amount: amountNum,
-          description: desc,
-          user_id: user.id,
-          payment_method: paymentMethod,
-        },
-      ]);
+      .insert([{ amount: amountNum, description: desc, user_id: user.id, payment_method: paymentMethod }]);
 
-    if (!error) {
-      /* UPDATE BALANCES */
-      setBalances((prev) => {
-        const updated = { ...prev };
-        if (paymentMethod === "gcash") updated.gcash -= amountNum;
-        if (paymentMethod === "cash") updated.cash -= amountNum;
-        if (paymentMethod === "bdoSavings") updated.bdoSavings -= amountNum;
-        if (paymentMethod === "bdoCredit") updated.bdoCredit += amountNum;
-        if (paymentMethod === "eastwestCredit") updated.eastwestCredit += amountNum;
-        return updated;
-      });
+    // 2️⃣ Fetch current balances
+    const { data: currentBalance } = await supabase
+      .from("balances")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
 
-      fetchLogs(filterDate);
-      setAmount("");
-      setDesc("");
-      setShowAdd(false);
-    }
+    if (!currentBalance) return;
+
+    // 3️⃣ Update balances object
+    const updated = {
+      gcash: Number(currentBalance.gcash),
+      cash: Number(currentBalance.cash),
+      bdo_savings: Number(currentBalance.bdo_savings),
+      bdo_credit: Number(currentBalance.bdo_credit),
+      eastwest_credit: Number(currentBalance.eastwest_credit),
+    };
+
+    if (paymentMethod === "gcash") updated.gcash -= amountNum;
+    if (paymentMethod === "cash") updated.cash -= amountNum;
+    if (paymentMethod === "bdoSavings") updated.bdo_savings -= amountNum;
+    if (paymentMethod === "bdoCredit") updated.bdo_credit += amountNum;
+    if (paymentMethod === "eastwestCredit") updated.eastwest_credit += amountNum;
+
+    // 4️⃣ Update DB balances
+    await supabase
+      .from("balances")
+      .update(updated)
+      .eq("user_id", user.id);
+
+    // 5️⃣ Update local state for UI
+    setBalances({
+      gcash: updated.gcash,
+      cash: updated.cash,
+      bdoSavings: updated.bdo_savings,
+      bdoCredit: updated.bdo_credit,
+      eastwestCredit: updated.eastwest_credit,
+    });
+
+    // 6️⃣ Reset inputs
+    setAmount("");
+    setDesc("");
+    setShowAdd(false);
+
+    // 7️⃣ Refresh logs
+    fetchLogs(filterDate);
   };
 
   /* --- Delete Expense --- */
