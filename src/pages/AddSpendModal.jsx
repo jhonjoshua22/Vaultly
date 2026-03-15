@@ -9,7 +9,6 @@ const AddSpendModal = ({
   addSpend,
   setShowAdd
 }) => {
-
   const [payment, setPayment] = useState("cash");
 
   const submit = () => {
@@ -20,10 +19,11 @@ const AddSpendModal = ({
     <div style={overlayStyle}>
       <div style={modal}>
         <div style={headerStyle}>
-          <h3>Add Spend</h3>
-          <X size={20} onClick={() => setShowAdd(false)} style={{ cursor: "pointer" }} />
+          <h3 style={{ margin: 0 }}>Add Spend</h3>
+          <X size={24} onClick={() => setShowAdd(false)} style={{ cursor: "pointer" }} />
         </div>
 
+        {/* Amount */}
         <input
           style={input}
           type="number"
@@ -32,13 +32,16 @@ const AddSpendModal = ({
           onChange={(e) => setAmount(e.target.value)}
         />
 
+        {/* Description */}
         <input
           style={input}
+          type="text"
           placeholder="Description"
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
         />
 
+        {/* Payment Method */}
         <select
           style={input}
           value={payment}
@@ -59,14 +62,61 @@ const AddSpendModal = ({
   );
 };
 
-const overlayStyle = { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", zIndex: 1000 };
+/* --- Styles --- */
+const overlayStyle = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0,0,0,0.85)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "20px",
+  zIndex: 1000,
+};
 
-const modal = { background: "#111", border: "1px solid #333", padding: "24px", borderRadius: "20px", width: "100%", maxWidth: "400px" };
+const modal = {
+  background: "#111",
+  border: "1px solid #333",
+  padding: "30px 24px",
+  borderRadius: "20px",
+  width: "100%",
+  maxWidth: "420px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "15px",
+};
 
-const headerStyle = { display: "flex", justifyContent: "space-between", marginBottom: "15px" };
+const headerStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "15px",
+};
 
-const input = { width: "100%", marginBottom: "15px", padding: "12px", borderRadius: "10px", border: "1px solid #333", background: "#000", color: "white" };
+const input = {
+  width: "100%",
+  padding: "14px 12px",
+  borderRadius: "12px",
+  border: "1px solid #333",
+  background: "#000",
+  color: "#fff",
+  fontSize: "16px", // prevents zoom on mobile
+  outline: "none",
+};
 
-const saveBtn = { background: "#10b981", border: "none", padding: "12px", borderRadius: "10px", color: "white", width: "100%", fontWeight: "bold", cursor: "pointer" };
+const saveBtn = {
+  background: "#10b981",
+  border: "none",
+  padding: "14px",
+  borderRadius: "12px",
+  color: "white",
+  width: "100%",
+  fontWeight: "bold",
+  cursor: "pointer",
+  fontSize: "16px",
+};
 
 export default AddSpendModal;
