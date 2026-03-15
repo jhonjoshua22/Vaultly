@@ -71,10 +71,10 @@ const Leo = () => {
           <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
             <Brain size={18} color="#10b981" /> <strong>Leo Insight</strong>
           </div>
-          <p style={{fontSize: '0.85rem', opacity: 0.8}}>Total expenditure tracked in your database: <strong>${totalSpent}</strong>.</p>
+          <p style={{fontSize: '0.85rem', opacity: 0.8}}>Total expenditure tracked: <strong>₱{totalSpent}</strong>.</p>
         </div>
         <div style={statsRowStyle}>
-          <div style={miniStatStyle}><Wallet size={16} color="#10b981" /> <span>Spent</span> <strong>${totalSpent}</strong></div>
+          <div style={miniStatStyle}><Wallet size={16} color="#10b981" /> <span>Spent</span> <strong>₱{totalSpent}</strong></div>
           <div style={miniStatStyle}><TrendingUp size={16} color="#10b981" /> <span>Trend</span> <strong>Active</strong></div>
         </div>
       </div>

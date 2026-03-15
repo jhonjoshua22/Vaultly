@@ -6,17 +6,14 @@ const UserStats = ({ profile, remaining, totalSpent, filterDate }) => {
       <div style={headerSectionStyle}>
         <div style={avatarStyle}></div>
         <p style={greetingStyle}>
-          Hi <strong>{profile.first_name}</strong>, today you have $
+          Hi <strong>{profile.first_name}</strong>, today you have ₱
           {remaining > 0 ? remaining : 0} remaining.
         </p>
       </div>
 
       <div style={cardStyle}>
-        <p style={{ margin: 0, fontSize: "0.8rem", opacity: 0.6 }}>
-          Spent on {filterDate}
-        </p>
         <h1 style={{ margin: "5px 0", color: "#10b981" }}>
-          ${totalSpent}
+          ₱{totalSpent}
         </h1>
       </div>
     </>

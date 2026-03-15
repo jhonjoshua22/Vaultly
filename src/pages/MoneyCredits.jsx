@@ -55,7 +55,7 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
             onClick={() => { setEditing(acc); setValue(balances[acc]); }}
           >
             <p style={cardTitle}>{balanceConfig[acc].label}</p>
-            <h3>${balances[acc]}</h3>
+            <h3>₱{balances[acc]}</h3>
           </div>
         ))}
       </div>
@@ -73,7 +73,7 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
             }}
           >
             <p style={cardTitle}>{balanceConfig[acc].label}</p>
-            <h3>${balances[acc]}</h3>
+            <h3>₱{balances[acc]}</h3>
           </div>
         ))}
       </div>
@@ -81,7 +81,7 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
       {/* TOTAL */}
       <div style={totalCard}>
         <p>Total Money</p>
-        <h2>${netTotal}</h2>
+        <h2>₱{netTotal}</h2>
       </div>
 
       {/* EDIT MODAL */}

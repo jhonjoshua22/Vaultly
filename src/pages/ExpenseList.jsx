@@ -16,7 +16,7 @@ const ExpenseList = ({ logs, expandedId, setExpandedId, deleteLog }) => {
         >
           <div style={logHeaderStyle}>
             <span>{log.description}</span>
-            <strong>${log.amount}</strong>
+            <strong>₱{log.amount}</strong>
           </div>
 
           <div style={timeStyle}>

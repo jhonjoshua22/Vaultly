@@ -13,7 +13,7 @@ const FriendList = ({ friendsLogs }) => {
         <div key={log.id} style={logItemStyle}>
           <div style={logHeaderStyle}>
             <span>Friend: {log.friendships?.friend_name || "Unknown"}</span>
-            <strong>${log.amount}</strong>
+            <strong>₱{log.amount}</strong>
           </div>
 
           <button
