@@ -5,12 +5,12 @@ const UserStats = ({ profile, remaining, totalSpent, filterDate }) => {
   return (
     <>
       <div style={headerSectionStyle}>
-        <img src={heroGif} alt="User Avatar" style={avatarStyle} />
         
         <p style={greetingStyle}>
           Hi <strong>{profile.first_name}</strong>, today you have ₱
           {remaining > 0 ? remaining : 0} remaining.
         </p>
+        <img src={heroGif} alt="User Avatar" style={avatarStyle} />
       </div>
 
       <div style={cardStyle}>
@@ -22,7 +22,7 @@ const UserStats = ({ profile, remaining, totalSpent, filterDate }) => {
   );
 };
 
-const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "25px", alignItems: "center" };
+const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "-10vh", alignItems: "center" };
 
 const avatarStyle = { 
   width: "20vh", 
