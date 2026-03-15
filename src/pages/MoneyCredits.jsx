@@ -39,8 +39,6 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
 
   return (
     <div style={{ marginTop: 30 }}>
-      <h3>Money & Credits Balance</h3>
-
       {/* MONEY */}
       <p style={{...sectionTitle, marginBottom: 10}}>My Money</p>
       <div style={grid}>

@@ -33,7 +33,7 @@ const AddSpendModal = ({
           <input
             style={input}
             type="text"
-            placeholder="Description"
+            placeholder="Item"
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
           />
@@ -111,6 +111,7 @@ const input = {
   color: "white",
   fontSize: "14px",
   outline: "none",
+  boxSizing: "border-box",
 };
 
 const saveBtn = {

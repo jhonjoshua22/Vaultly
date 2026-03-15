@@ -168,11 +168,10 @@ const Home = () => {
       <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
 
       <button style={addBtn} onClick={() => setShowAdd(true)}>
-        <Plus size={18}/> Add Spend
+         Add Spend
       </button>
 
       <div style={{ marginTop: 25, display: "flex", gap: 10 }}>
-        <Calendar size={18} color="#10b981"/>
         <input type="date" value={filterDate} onChange={(e) => { setFilterDate(e.target.value); fetchLogs(e.target.value); }} style={dateInputStyle}/>
       </div>
 
