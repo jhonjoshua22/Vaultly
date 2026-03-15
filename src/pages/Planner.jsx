@@ -85,7 +85,7 @@ const listItemStyle = { padding: '20px', background: '#1c1c1e', borderRadius: '1
 const addBtnStyle = { background: 'none', border: 'none', color: '#10b981', cursor: 'pointer' };
 const navBtn = { background: 'none', border: 'none', color: '#10b981', display: 'flex', alignItems: 'center', cursor: 'pointer' };
 const titleInput = { width: '100%', fontSize: '1.8rem', background: 'transparent', border: 'none', color: '#fff', marginBottom: '20px', outline: 'none' };
-const inputStyle = { flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem', outline: 'none', textAlign: 'center', padding: '0',  };
+const inputStyle = { flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '1rem', outline: 'none', textAlign: 'left', padding: '0',  };
 const textAreaStyle = { flex: 1, height: '150px', background: 'transparent', border: 'none', color: '#ccc', fontSize: '1rem', resize: 'none', outline: 'none' };
 const saveBtn = { width: '100%', marginTop: '20px', padding: '15px', background: '#10b981', border: 'none', borderRadius: '12px', color: '#000', fontWeight: 'bold', cursor: 'pointer' };
 
