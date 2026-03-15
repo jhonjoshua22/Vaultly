@@ -25,9 +25,6 @@ const FriendList = ({ friendsLogs }) => {
         </div>
       ))}
 
-      {friendsLogs.length === 0 && (
-        <p style={{ opacity: 0.5 }}>No friends activity yet.</p>
-      )}
     </>
   );
 };
