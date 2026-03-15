@@ -15,29 +15,29 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
   const balanceConfig = {
     gcash: { 
       label: "GCash", 
-      color: "rgba(30, 58, 138, 0.9)",
+      color: "rgba(30, 58, 138, 0.95)",
       img: gcashImg 
     },
     cash: { 
       label: "Cash", 
-      color: "rgba(255, 255, 255, 0.9)", 
+      color: "rgba(255, 255, 255, 0.95)", 
       textColor: "#000", 
       img: cashImg 
     },
     bdoSavings: { 
       label: "BDO Savings", 
-      color: "rgba(96, 165, 250, 0.9)", 
+      color: "rgba(96, 165, 250, 0.95)", 
       img: bdoImg 
     },
     bdoCredit: { 
       label: "BDO Credit", 
-      color: "rgba(196, 181, 253, 0.9)", 
+      color: "rgba(196, 181, 253, 0.95)", 
       textColor: "#000", 
       img: bdoImg 
     },
     eastwestCredit: { 
       label: "Eastwest Credit", 
-      color: "rgba(214, 172, 4, 0.9)", 
+      color: "rgba(214, 172, 4, 0.95)", 
       textColor: "#000", 
       img: eastwestImg 
     }
