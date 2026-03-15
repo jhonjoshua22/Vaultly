@@ -12,15 +12,6 @@ const Home = () => {
   const [logs, setLogs] = useState([]);
   const [friendsLogs, setFriendsLogs] = useState([]);
   const [profile, setProfile] = useState({ first_name: "User", dailyLimit: 150 });
-
-  const [expandedId, setExpandedId] = useState(null);
-  const [showAdd, setShowAdd] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [desc, setDesc] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
-
-  /* MONEY + CREDIT BALANCES */
   const [balances, setBalances] = useState({
     gcash: 0,
     cash: 0,
@@ -29,146 +20,141 @@ const Home = () => {
     eastwestCredit: 0,
   });
 
-  /* --- Initialization --- */
+  const [expandedId, setExpandedId] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [desc, setDesc] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
+  const [userId, setUserId] = useState(null);
+
   useEffect(() => {
     const init = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
         return;
       }
-
+      setUserId(user.id);
       await fetchProfile(user.id);
       await fetchLogs(filterDate);
       await fetchFriendsActivity(user.id);
-
+      await fetchBalances(user.id);
       setLoading(false);
     };
-
     init();
   }, []);
 
-  /* --- Fetch Profile --- */
+  // --- Fetch Profile
   const fetchProfile = async (userId) => {
     const { data } = await supabase
       .from("profiles")
       .select("first_name, daily_limit")
       .eq("id", userId)
       .single();
-
     if (data) {
-      setProfile({
-        first_name: data.first_name || "User",
-        dailyLimit: data.daily_limit || 150,
-      });
+      setProfile({ first_name: data.first_name || "User", dailyLimit: data.daily_limit || 150 });
     }
   };
 
-  /* --- Fetch Expenses --- */
+  // --- Fetch Expenses
   const fetchLogs = async (dateStr) => {
-    const start = new Date(dateStr);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(dateStr);
-    end.setHours(23, 59, 59, 999);
-
+    const start = new Date(dateStr); start.setHours(0,0,0,0);
+    const end = new Date(dateStr); end.setHours(23,59,59,999);
     const { data } = await supabase
       .from("expenses")
       .select("*")
       .gte("created_at", start.toISOString())
       .lte("created_at", end.toISOString())
       .order("created_at", { ascending: false });
-
     setLogs(data || []);
   };
 
-  /* --- Fetch Friends Activity --- */
+  // --- Fetch Friends Activity
   const fetchFriendsActivity = async (userId) => {
     const { data: friends } = await supabase
       .from("friendships")
       .select("id, friend_name")
       .eq("user_id", userId);
-
     if (friends && friends.length > 0) {
-      const friendIds = friends.map((f) => f.id);
-
+      const friendIds = friends.map(f => f.id);
       const { data: logs } = await supabase
         .from("friend_logs")
         .select("*, friendships(friend_name)")
         .in("friendship_id", friendIds)
         .order("time_logged", { ascending: false });
-
       setFriendsLogs(logs || []);
     }
   };
 
-  /* --- Add Spend with Payment Method --- */
-  // Inside Home.jsx
+  // --- Fetch Balances
+  const fetchBalances = async (userId) => {
+    const { data } = await supabase
+      .from("balances")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+    if (data) {
+      setBalances({
+        gcash: Number(data.gcash),
+        cash: Number(data.cash),
+        bdoSavings: Number(data.bdo_savings),
+        bdoCredit: Number(data.bdo_credit),
+        eastwestCredit: Number(data.eastwest_credit),
+      });
+    }
+  };
+
+  // --- Add Spend
   const addSpend = async (paymentMethod) => {
     if (!amount || !desc) return;
     const amountNum = Number(amount);
 
-    const { data: { user } } = await supabase.auth.getUser();
+    // 1️⃣ Insert expense
+    await supabase.from("expenses").insert([
+      { amount: amountNum, description: desc, user_id: userId, payment_method: paymentMethod }
+    ]);
 
-    // 1️⃣ Insert spend
-    await supabase
-      .from("expenses")
-      .insert([{ amount: amountNum, description: desc, user_id: user.id, payment_method: paymentMethod }]);
-
-    // 2️⃣ Fetch current balances
+    // 2️⃣ Update balances in DB
     const { data: currentBalance } = await supabase
       .from("balances")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
-
     if (!currentBalance) return;
 
-    // 3️⃣ Update balances object
     const updated = {
       gcash: Number(currentBalance.gcash),
       cash: Number(currentBalance.cash),
-      bdo_savings: Number(currentBalance.bdo_savings),
-      bdo_credit: Number(currentBalance.bdo_credit),
-      eastwest_credit: Number(currentBalance.eastwest_credit),
+      bdoSavings: Number(currentBalance.bdo_savings),
+      bdoCredit: Number(currentBalance.bdo_credit),
+      eastwestCredit: Number(currentBalance.eastwest_credit),
     };
 
     if (paymentMethod === "gcash") updated.gcash -= amountNum;
     if (paymentMethod === "cash") updated.cash -= amountNum;
-    if (paymentMethod === "bdoSavings") updated.bdo_savings -= amountNum;
-    if (paymentMethod === "bdoCredit") updated.bdo_credit += amountNum;
-    if (paymentMethod === "eastwestCredit") updated.eastwest_credit += amountNum;
+    if (paymentMethod === "bdoSavings") updated.bdoSavings -= amountNum;
+    if (paymentMethod === "bdoCredit") updated.bdoCredit += amountNum;
+    if (paymentMethod === "eastwestCredit") updated.eastwestCredit += amountNum;
 
-    // 4️⃣ Update DB balances
-    await supabase
-      .from("balances")
-      .update(updated)
-      .eq("user_id", user.id);
-
-    // 5️⃣ Update local state for UI
-    setBalances({
+    await supabase.from("balances").update({
       gcash: updated.gcash,
       cash: updated.cash,
-      bdoSavings: updated.bdo_savings,
-      bdoCredit: updated.bdo_credit,
-      eastwestCredit: updated.eastwest_credit,
-    });
+      bdo_savings: updated.bdoSavings,
+      bdo_credit: updated.bdoCredit,
+      eastwest_credit: updated.eastwestCredit,
+      updated_at: new Date()
+    }).eq("user_id", userId);
 
-    // 6️⃣ Reset inputs
-    setAmount("");
-    setDesc("");
-    setShowAdd(false);
-
-    // 7️⃣ Refresh logs
+    setBalances(updated);
+    setAmount(""); setDesc(""); setShowAdd(false);
     fetchLogs(filterDate);
   };
 
-  /* --- Delete Expense --- */
+  // --- Delete Expense
   const deleteLog = async (id) => {
-    const { error } = await supabase.from("expenses").delete().eq("id", id);
-    if (!error) setLogs(logs.filter((l) => l.id !== id));
+    await supabase.from("expenses").delete().eq("id", id);
+    setLogs(logs.filter(l => l.id !== id));
   };
 
   const totalSpent = logs.reduce((acc, curr) => acc + Number(curr.amount), 0);
@@ -178,65 +164,33 @@ const Home = () => {
 
   return (
     <div style={pageStyle}>
-      <UserStats
-        profile={profile}
-        remaining={remaining}
-        totalSpent={totalSpent}
-        filterDate={filterDate}
-      />
-
-      {/* MONEY + CREDIT SECTION */}
-      <MoneyCredits balances={balances} setBalances={setBalances} />
+      <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
+      <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
 
       <button style={addBtn} onClick={() => setShowAdd(true)}>
-        <Plus size={18} /> Add Spend
+        <Plus size={18}/> Add Spend
       </button>
 
-      <div style={{ marginTop: "25px", display: "flex", gap: "10px" }}>
-        <Calendar size={18} color="#10b981" />
-        <input
-          type="date"
-          value={filterDate}
-          onChange={(e) => {
-            setFilterDate(e.target.value);
-            fetchLogs(e.target.value);
-          }}
-          style={dateInputStyle}
-        />
+      <div style={{ marginTop: 25, display: "flex", gap: 10 }}>
+        <Calendar size={18} color="#10b981"/>
+        <input type="date" value={filterDate} onChange={(e) => { setFilterDate(e.target.value); fetchLogs(e.target.value); }} style={dateInputStyle}/>
       </div>
 
-      <ExpenseList
-        logs={logs}
-        expandedId={expandedId}
-        setExpandedId={setExpandedId}
-        deleteLog={deleteLog}
-      />
+      <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}/>
+      <FriendList friendsLogs={friendsLogs}/>
+      {friendsLogs.length === 0 && <p style={{opacity:0.5}}>No friends activity yet.</p>}
 
-      {/* FRIENDS ACTIVITY */}
-      <FriendList friendsLogs={friendsLogs} />
-      {friendsLogs.length === 0 && (
-        <p style={{ opacity: 0.5 }}>No friends activity yet.</p>
-      )}
-
-      {/* ADD SPEND MODAL */}
       {showAdd && (
-        <AddSpendModal
-          amount={amount}
-          setAmount={setAmount}
-          desc={desc}
-          setDesc={setDesc}
-          addSpend={addSpend}
-          setShowAdd={setShowAdd}
-        />
+        <AddSpendModal amount={amount} setAmount={setAmount} desc={desc} setDesc={setDesc} addSpend={addSpend} setShowAdd={setShowAdd}/>
       )}
     </div>
   );
 };
 
 /* --- Styles --- */
-const pageStyle = { padding: "20px", maxWidth: "600px", margin: "auto", color: "white", paddingBottom: "120px" };
-const loadingStyle = { padding: "50px", textAlign: "center", color: "white" };
-const addBtn = { marginTop: "20px", background: "#10b981", border: "none", color: "white", padding: "12px 20px", borderRadius: "12px", width: "100%", fontWeight: "bold", cursor: "pointer" };
-const dateInputStyle = { background: "#111", border: "1px solid #333", color: "white", padding: "8px", borderRadius: "8px" };
+const pageStyle = { padding: 20, maxWidth: 600, margin: "auto", color: "white", paddingBottom: 120 };
+const loadingStyle = { padding: 50, textAlign: "center", color: "white" };
+const addBtn = { marginTop: 20, background: "#10b981", border: "none", color: "white", padding: "12px 20px", borderRadius: 12, width: "100%", fontWeight: "bold", cursor: "pointer" };
+const dateInputStyle = { background: "#111", border: "1px solid #333", color: "white", padding: 8, borderRadius: 8 };
 
 export default Home;
