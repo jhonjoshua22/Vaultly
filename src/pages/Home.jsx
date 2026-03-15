@@ -212,7 +212,7 @@ const Home = () => {
 };
 
 /* --- Styles --- */
-const pageStyle = { padding: "20px", maxWidth: "600px", margin: "auto", color: "white" };
+const pageStyle = { padding: "20px", maxWidth: "600px", margin: "auto", color: "white", paddingBottom: "120px" };
 const loadingStyle = { padding: "50px", textAlign: "center", color: "white" };
 const addBtn = { marginTop: "20px", background: "#10b981", border: "none", color: "white", padding: "12px 20px", borderRadius: "12px", width: "100%", fontWeight: "bold", cursor: "pointer" };
 const dateInputStyle = { background: "#111", border: "1px solid #333", color: "white", padding: "8px", borderRadius: "8px" };
