@@ -53,7 +53,7 @@ function App() {
     <div style={appContainerStyle}>
       <div style={mobileWrapperStyle}>
         <Topbar />
-        <main style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+        <main style={{ flex: 1, position: 'relative' }}>
           {/* Keep all pages mounted and show/hide via display */}
           <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>
             <Home />
@@ -88,7 +88,8 @@ const appContainerStyle = {
   display: 'flex',
   justifyContent: 'center',
   color: '#fff',
-  fontFamily: 'sans-serif'
+  fontFamily: 'sans-serif',
+  overflowY: 'auto',
 };
 const mobileWrapperStyle = {
   width: '100%',
@@ -96,7 +97,8 @@ const mobileWrapperStyle = {
   backgroundColor: '#000',
   display: 'flex',
   flexDirection: 'column',
-  position: 'relative'
+  position: 'relative',
+  minHeight: '100vh'
 };
 const loginBtn = {
   padding: '12px 24px',
