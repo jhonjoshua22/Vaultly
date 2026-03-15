@@ -15,18 +15,18 @@ const Home = () => {
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        window.location.href = "/";
-        return;
-      }
-      fetchProfile(user.id);
-      fetchLogs(filterDate);
-      setLoading(false);
-    };
-    init();
-  }, []);
+  const init = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false); // Stop loading, but do not redirect!
+      return;
+    }
+    fetchProfile(user.id);
+    fetchLogs(filterDate);
+    setLoading(false);
+  };
+  init();
+}, []);
 
   const fetchProfile = async (userId) => {
     const { data } = await supabase
