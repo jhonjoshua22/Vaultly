@@ -1,12 +1,31 @@
-const UserStats = ({ profile, logs, filterDate, onDateChange }) => {
-  const totalSpent = logs.reduce((acc, curr) => acc + Number(curr.amount), 0);
-  const remaining = profile.dailyLimit - totalSpent;
+import React from "react";
+
+const UserStats = ({ profile, remaining, totalSpent, filterDate }) => {
   return (
-    <div className="card">
-      <p>Hi <strong>{profile.first_name}</strong>, ${remaining > 0 ? remaining : 0} left.</p>
-      <h1>${totalSpent}</h1>
-      <input type="date" value={filterDate} onChange={(e) => onDateChange(e.target.value)} />
-    </div>
+    <>
+      <div style={headerSectionStyle}>
+        <div style={avatarStyle}></div>
+        <p style={greetingStyle}>
+          Hi <strong>{profile.first_name}</strong>, today you have $
+          {remaining > 0 ? remaining : 0} remaining.
+        </p>
+      </div>
+
+      <div style={cardStyle}>
+        <p style={{ margin: 0, fontSize: "0.8rem", opacity: 0.6 }}>
+          Spent on {filterDate}
+        </p>
+        <h1 style={{ margin: "5px 0", color: "#10b981" }}>
+          ${totalSpent}
+        </h1>
+      </div>
+    </>
   );
 };
+
+const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "25px", alignItems: "center" };
+const avatarStyle = { width: "60px", height: "60px", borderRadius: "50%", background: "linear-gradient(45deg,#10b981,#064e3b)" };
+const greetingStyle = { fontSize: "0.9rem", lineHeight: "1.4" };
+const cardStyle = { background: "#111", padding: "20px", borderRadius: "18px", border: "1px solid #222" };
+
 export default UserStats;
