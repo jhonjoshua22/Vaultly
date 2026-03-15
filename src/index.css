@@ -149,6 +149,15 @@ select {
   background-image: none; 
 }
 
+input:focus, 
+select:focus, 
+textarea:focus, 
+button:focus {
+    outline: none !important;
+    border: 1px solid #333; /* Keep your custom border color so it doesn't jump */
+    box-shadow: none !important; /* Some browsers like Chrome add a shadow */
+}
+
 /* --- Added Component Styles --- */
 .page-container { padding: 20px; max-width: 600px; margin: auto; color: var(--text-h); }
 .card { background: var(--code-bg); padding: 20px; borderRadius: 18px; border: 1px solid var(--border); }
