@@ -8,7 +8,7 @@ import Bottombar from './components/Bottombar';
 // Page Components
 import Home from './pages/Home';
 import Leo from './pages/Leo';
-import Archive from './pages/Archive';
+import Planner from './pages/Planner';
 import Profile from './pages/Profile';
 import AuthCallback from './pages/AuthCallback';
 
@@ -63,7 +63,7 @@ function App() {
         <main style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'Home' && <Home />}
           {activeTab === 'Leo' && <Leo />}
-          {activeTab === 'Archive' && <Archive />}
+          {activeTab === 'Planner' && <Planner />}
           {activeTab === 'Profile' && <Profile />}
         </main>
         <Bottombar activeTab={activeTab} setActiveTab={setActiveTab} />
