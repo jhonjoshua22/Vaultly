@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase';
 const PlannerEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [data, setData] = useState({ title: '', amount: '', plan_date: new Date().toISOString().split('T')[0], note: '' });
+  // Ensure state matches DB columns: title, amount, plan_date, text
+  const [data, setData] = useState({ title: '', amount: '', plan_date: new Date().toISOString().split('T')[0], text: '' });
 
   useEffect(() => {
     if (id) fetchPlan();
@@ -42,7 +43,7 @@ const PlannerEditor = () => {
       <input placeholder="Title" style={titleInput} value={data.title} onChange={e => setData({...data, title: e.target.value})} />
       <input type="number" placeholder="Amount" style={inputStyle} value={data.amount} onChange={e => setData({...data, amount: e.target.value})} />
       <input type="date" style={inputStyle} value={data.plan_date} onChange={e => setData({...data, plan_date: e.target.value})} />
-      <textarea placeholder="Details or notes..." style={textAreaStyle} value={data.note} onChange={e => setData({...data, note: e.target.value})} />
+      <textarea placeholder="Details or notes..." style={textAreaStyle} value={data.text} onChange={e => setData({...data, text: e.target.value})} />
       
       <button onClick={savePlan} style={saveBtn}>Done</button>
     </div>
