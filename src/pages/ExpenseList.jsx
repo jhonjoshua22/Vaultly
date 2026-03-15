@@ -12,7 +12,7 @@ const ExpenseList = ({
 }) => {
   return (
     <>
-      <h3 style={{ marginTop: "20px" }}>Activity</h3>
+      <h3 style={{ marginTop: "5vh" }}>Activity</h3>
 
       {/* Calendar Filter UI */}
       <div style={{ marginTop: "25px", marginBottom: "25px", display: "flex", alignItems: "center", gap: "10px" }}>
