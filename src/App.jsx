@@ -55,14 +55,49 @@ function App() {
   );
 }
 
-// Simple Login View (Create this if you don't have one)
-const LoginPrompt = () => (
-  <div style={{ padding: '40px', textAlign: 'center', color: 'white' }}>
-    <h1>Vaultly</h1>
-    <p>Please log in to continue.</p>
-    {/* Add your OAuth button here */}
-  </div>
-);
+const LoginPrompt = () => {
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+    if (error) {
+      console.error("Login failed:", error.message);
+      alert("Login failed: " + error.message);
+    }
+  };
+
+  return (
+    <div style={{ padding: '40px', textAlign: 'center', color: 'white', marginTop: '100px' }}>
+      <h1>Vaultly</h1>
+      <p style={{ opacity: 0.7, marginBottom: '30px' }}>Log in to track your daily spend.</p>
+      <button 
+        onClick={handleGoogleLogin} 
+        style={{ 
+          padding: '12px 24px', 
+          background: '#4285F4', // Google Blue
+          border: 'none', 
+          borderRadius: '8px', 
+          color: 'white', 
+          fontWeight: 'bold', 
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          margin: '0 auto'
+        }}
+      >
+        Login with Google
+      </button>
+    </div>
+  );
+};
 
 const appContainerStyle = { backgroundColor: '#000', minHeight: '100vh', display: 'flex', justifyContent: 'center', color: '#fff' };
 const mobileWrapperStyle = { width: '100%', maxWidth: '500px', backgroundColor: '#000', display: 'flex', flexDirection: 'column' };
