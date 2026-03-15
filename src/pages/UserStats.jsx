@@ -27,11 +27,10 @@ const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "-2vh",
 const avatarStyle = { 
   width: "20vh", 
   height: "20vh", 
-  borderRadius: "50%", 
   objectFit: "cover"
 };
 
 const greetingStyle = { fontSize: "0.9rem", lineHeight: "1.4" };
-const cardStyle = { background: "#111", padding: "none", borderRadius: "none", border: "none" };
+const cardStyle = { background: "#111", padding: "20px", borderRadius: "18px", border: "1px solid #222" };
 
 export default UserStats;
