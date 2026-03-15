@@ -11,26 +11,16 @@ import MoneyCredits from "./MoneyCredits";
 const Home = () => {
   const [logs, setLogs] = useState([]);
   const [friendsLogs, setFriendsLogs] = useState([]);
-
-  const [profile, setProfile] = useState({
-    first_name: "User",
-    dailyLimit: 150,
-  });
+  const [profile, setProfile] = useState({ first_name: "User", dailyLimit: 150 });
 
   const [expandedId, setExpandedId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
-
   const [loading, setLoading] = useState(true);
-
-  const [filterDate, setFilterDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
 
   /* MONEY + CREDIT BALANCES */
-
   const [balances, setBalances] = useState({
     gcash: 0,
     cash: 0,
@@ -39,10 +29,9 @@ const Home = () => {
     eastwestCredit: 0,
   });
 
+  /* --- Initialization --- */
   useEffect(() => {
     const init = async () => {
-      fetchFriendsActivity();
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -52,8 +41,9 @@ const Home = () => {
         return;
       }
 
-      fetchProfile(user.id);
-      fetchLogs(filterDate);
+      await fetchProfile(user.id);
+      await fetchLogs(filterDate);
+      await fetchFriendsActivity(user.id);
 
       setLoading(false);
     };
@@ -61,6 +51,7 @@ const Home = () => {
     init();
   }, []);
 
+  /* --- Fetch Profile --- */
   const fetchProfile = async (userId) => {
     const { data } = await supabase
       .from("profiles")
@@ -76,10 +67,10 @@ const Home = () => {
     }
   };
 
+  /* --- Fetch Expenses --- */
   const fetchLogs = async (dateStr) => {
     const start = new Date(dateStr);
     start.setHours(0, 0, 0, 0);
-
     const end = new Date(dateStr);
     end.setHours(23, 59, 59, 999);
 
@@ -93,22 +84,19 @@ const Home = () => {
     setLogs(data || []);
   };
 
-  const fetchFriendsActivity = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+  /* --- Fetch Friends Activity --- */
+  const fetchFriendsActivity = async (userId) => {
     const { data: friends } = await supabase
       .from("friendships")
       .select("id, friend_name")
-      .eq("user_id", user.id);
+      .eq("user_id", userId);
 
     if (friends && friends.length > 0) {
       const friendIds = friends.map((f) => f.id);
 
       const { data: logs } = await supabase
         .from("friend_logs")
-        .select("*")
+        .select("*, friendships(friend_name)")
         .in("friendship_id", friendIds)
         .order("time_logged", { ascending: false });
 
@@ -116,11 +104,9 @@ const Home = () => {
     }
   };
 
-  /* ADD SPEND WITH PAYMENT METHOD */
-
+  /* --- Add Spend with Payment Method --- */
   const addSpend = async (paymentMethod) => {
     if (!amount || !desc) return;
-
     const amountNum = Number(amount);
 
     const {
@@ -140,37 +126,30 @@ const Home = () => {
 
     if (!error) {
       /* UPDATE BALANCES */
-
       setBalances((prev) => {
         const updated = { ...prev };
-
         if (paymentMethod === "gcash") updated.gcash -= amountNum;
         if (paymentMethod === "cash") updated.cash -= amountNum;
         if (paymentMethod === "bdoSavings") updated.bdoSavings -= amountNum;
-
         if (paymentMethod === "bdoCredit") updated.bdoCredit += amountNum;
-        if (paymentMethod === "eastwestCredit")
-          updated.eastwestCredit += amountNum;
-
+        if (paymentMethod === "eastwestCredit") updated.eastwestCredit += amountNum;
         return updated;
       });
 
       fetchLogs(filterDate);
-
       setAmount("");
       setDesc("");
       setShowAdd(false);
     }
   };
 
+  /* --- Delete Expense --- */
   const deleteLog = async (id) => {
     const { error } = await supabase.from("expenses").delete().eq("id", id);
-
     if (!error) setLogs(logs.filter((l) => l.id !== id));
   };
 
   const totalSpent = logs.reduce((acc, curr) => acc + Number(curr.amount), 0);
-
   const remaining = profile.dailyLimit - totalSpent;
 
   if (loading) return <div style={loadingStyle}>Loading...</div>;
@@ -185,7 +164,6 @@ const Home = () => {
       />
 
       {/* MONEY + CREDIT SECTION */}
-
       <MoneyCredits balances={balances} setBalances={setBalances} />
 
       <button style={addBtn} onClick={() => setShowAdd(true)}>
@@ -194,7 +172,6 @@ const Home = () => {
 
       <div style={{ marginTop: "25px", display: "flex", gap: "10px" }}>
         <Calendar size={18} color="#10b981" />
-
         <input
           type="date"
           value={filterDate}
@@ -213,11 +190,13 @@ const Home = () => {
         deleteLog={deleteLog}
       />
 
+      {/* FRIENDS ACTIVITY */}
       <FriendList friendsLogs={friendsLogs} />
       {friendsLogs.length === 0 && (
-          <p style={{opacity:0.5}}>No friends activity yet.</p>
+        <p style={{ opacity: 0.5 }}>No friends activity yet.</p>
       )}
 
+      {/* ADD SPEND MODAL */}
       {showAdd && (
         <AddSpendModal
           amount={amount}
@@ -232,39 +211,10 @@ const Home = () => {
   );
 };
 
-/* styles */
-
-const pageStyle = {
-  padding: "20px",
-  maxWidth: "600px",
-  margin: "auto",
-  color: "white",
-};
-
-const loadingStyle = {
-  padding: "50px",
-  textAlign: "center",
-  color: "white",
-};
-
-const addBtn = {
-  marginTop: "20px",
-  background: "#10b981",
-  border: "none",
-  color: "white",
-  padding: "12px 20px",
-  borderRadius: "12px",
-  width: "100%",
-  fontWeight: "bold",
-  cursor: "pointer",
-};
-
-const dateInputStyle = {
-  background: "#111",
-  border: "1px solid #333",
-  color: "white",
-  padding: "8px",
-  borderRadius: "8px",
-};
+/* --- Styles --- */
+const pageStyle = { padding: "20px", maxWidth: "600px", margin: "auto", color: "white" };
+const loadingStyle = { padding: "50px", textAlign: "center", color: "white" };
+const addBtn = { marginTop: "20px", background: "#10b981", border: "none", color: "white", padding: "12px 20px", borderRadius: "12px", width: "100%", fontWeight: "bold", cursor: "pointer" };
+const dateInputStyle = { background: "#111", border: "1px solid #333", color: "white", padding: "8px", borderRadius: "8px" };
 
 export default Home;

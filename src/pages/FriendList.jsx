@@ -12,24 +12,42 @@ const FriendList = ({ friendsLogs }) => {
       {friendsLogs.map((log) => (
         <div key={log.id} style={logItemStyle}>
           <div style={logHeaderStyle}>
-            <span>Friend: {log.description}</span>
+            <span>Friend: {log.friendships?.friend_name || "Unknown"}</span>
             <strong>${log.amount}</strong>
           </div>
 
           <button
-            onClick={() => notifyFriend(log.description)}
+            onClick={() => notifyFriend(log.friendships?.friend_name)}
             style={notifyBtn}
           >
             Notify Friend
           </button>
         </div>
       ))}
+
+      {friendsLogs.length === 0 && (
+        <p style={{ opacity: 0.5 }}>No friends activity yet.</p>
+      )}
     </>
   );
 };
 
-const logItemStyle = { background: "#111", padding: "15px", borderRadius: "12px", border: "1px solid #222", marginBottom: "10px" };
+const logItemStyle = {
+  background: "#111",
+  padding: "15px",
+  borderRadius: "12px",
+  border: "1px solid #222",
+  marginBottom: "10px",
+};
 const logHeaderStyle = { display: "flex", justifyContent: "space-between" };
-const notifyBtn = { marginTop: "10px", background: "#3b82f6", border: "none", color: "white", padding: "10px", borderRadius: "8px", cursor: "pointer" };
+const notifyBtn = {
+  marginTop: "10px",
+  background: "#3b82f6",
+  border: "none",
+  color: "white",
+  padding: "10px",
+  borderRadius: "8px",
+  cursor: "pointer",
+};
 
 export default FriendList;
