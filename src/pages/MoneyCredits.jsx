@@ -1,16 +1,46 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 
+// Import photos from assets
+import gcashImg from "../assets/gcash.png";
+import cashImg from "../assets/cash.jpg";
+import bdoImg from "../assets/bdo.jpg";
+import eastwestImg from "../assets/eastwest.jpg";
+
 const MoneyCredits = ({ balances, setBalances, userId }) => {
   const [editing, setEditing] = useState(null);
   const [value, setValue] = useState("");
 
+  // Map database keys to UI labels, colors, and images
   const balanceConfig = {
-    gcash: { label: "GCash", color: "#1e3a8a" },
-    cash: { label: "Cash", color: "#ffffff", textColor: "#000" },
-    bdoSavings: { label: "BDO Savings", color: "#60a5fa" },
-    bdoCredit: { label: "BDO Credit", color: "#c4b5fd" },
-    eastwestCredit: { label: "Eastwest Credit", color: "#facc15" }
+    gcash: { 
+      label: "GCash", 
+      color: "rgba(30, 58, 138, 0.7)", // 70% color + 30% image
+      img: gcashImg 
+    },
+    cash: { 
+      label: "Cash", 
+      color: "rgba(255, 255, 255, 0.7)", 
+      textColor: "#000", 
+      img: cashImg 
+    },
+    bdoSavings: { 
+      label: "BDO Savings", 
+      color: "rgba(96, 165, 250, 0.7)", 
+      img: bdoImg 
+    },
+    bdoCredit: { 
+      label: "BDO Credit", 
+      color: "rgba(196, 181, 253, 0.7)", 
+      textColor: "#000", 
+      img: bdoImg 
+    },
+    eastwestCredit: { 
+      label: "Eastwest Credit", 
+      color: "rgba(250, 204, 21, 0.7)", 
+      textColor: "#000", 
+      img: eastwestImg 
+    }
   };
 
   const updateBalance = async () => {
@@ -30,16 +60,22 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
     }).eq("user_id", userId);
   };
 
-  const moneyTotal = balances.gcash + balances.cash + balances.bdoSavings;
-  const creditTotal = balances.bdoCredit + balances.eastwestCredit;
-  const netTotal = moneyTotal - creditTotal;
+  const netTotal = (balances.gcash + balances.cash + balances.bdoSavings) - (balances.bdoCredit + balances.eastwestCredit);
 
   return (
     <div style={{ marginTop: 30 }}>
       <p style={{...sectionTitle, marginBottom: 10}}>My Money</p>
       <div style={grid}>
         {["gcash","cash","bdoSavings"].map(acc => (
-          <div key={acc} style={{ ...card, backgroundColor: balanceConfig[acc].color, color: balanceConfig[acc].textColor || "#fff" }} onClick={() => { setEditing(acc); setValue(balances[acc]); }}>
+          <div 
+            key={acc} 
+            style={{ 
+                ...card, 
+                backgroundImage: `linear-gradient(${balanceConfig[acc].color}, ${balanceConfig[acc].color}), url(${balanceConfig[acc].img})`,
+                color: balanceConfig[acc].textColor || "#fff" 
+            }} 
+            onClick={() => { setEditing(acc); setValue(balances[acc]); }}
+          >
             <p style={cardTitle}>{balanceConfig[acc].label}</p>
             <h3 style={{ margin: "5px 0" }}>₱{balances[acc]}</h3>
           </div>
@@ -49,7 +85,15 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
       <p style={{ ...sectionTitle, marginTop: 20, marginBottom: 10 }}>Credit Balance</p>
       <div style={creditGrid}>
         {["bdoCredit","eastwestCredit"].map(acc => (
-          <div key={acc} style={{ ...card, backgroundColor: balanceConfig[acc].color, color: balanceConfig[acc].textColor || "#000" }} onClick={() => { setEditing(acc); setValue(balances[acc]); }}>
+          <div 
+            key={acc} 
+            style={{ 
+                ...card, 
+                backgroundImage: `linear-gradient(${balanceConfig[acc].color}, ${balanceConfig[acc].color}), url(${balanceConfig[acc].img})`,
+                color: balanceConfig[acc].textColor || "#000" 
+            }} 
+            onClick={() => { setEditing(acc); setValue(balances[acc]); }}
+          >
             <p style={cardTitle}>{balanceConfig[acc].label}</p>
             <h3 style={{ margin: "5px 0" }}>₱{balances[acc]}</h3>
           </div>
@@ -77,9 +121,20 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
 /* --- Updated Styles --- */
 const grid = { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 };
 const creditGrid = { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 };
-const card = { padding: 12, borderRadius: 12, border: "1px solid #222", cursor: "pointer" };
+const card = { 
+    padding: 12, 
+    borderRadius: 12, 
+    border: "1px solid #222", 
+    cursor: "pointer",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    aspectRatio: "1/1", // Keeps cards square for the 3-column grid
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center"
+};
 const totalCard = { marginTop: 20, background: "#064e3b", padding: 18, borderRadius: 14, textAlign: "center", color:"#fff" };
-const cardTitle = { fontSize: "0.7rem", opacity: 0.7, margin: 0 };
+const cardTitle = { fontSize: "0.7rem", opacity: 0.9, margin: 0, fontWeight: "bold" };
 const sectionTitle = { fontSize: "0.8rem", opacity: 0.6 };
 const overlay = { position: "fixed", top:0,left:0,right:0,bottom:0, background:"rgba(0,0,0,0.7)", display:"flex", justifyContent:"center", alignItems:"center", zIndex: 1000 };
 const modal = { background:"#111", padding:24, borderRadius:16, width:"90%", maxWidth:300 };
