@@ -7,6 +7,7 @@ import FriendList from "./FriendList";
 import UserStats from "./UserStats";
 import AddSpendModal from "./AddSpendModal";
 import MoneyCredits from "./MoneyCredits";
+import AddMoneyModal from "./AddMoneyModal";
 
 const Home = () => {
   const [logs, setLogs] = useState([]);
@@ -19,6 +20,7 @@ const Home = () => {
     bdoCredit: 0,
     eastwestCredit: 0,
   });
+  const [showAddMoney, setShowAddMoney] = useState(false);
 
   const [expandedId, setExpandedId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -167,17 +169,33 @@ const Home = () => {
       <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
       <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
 
-      <button style={addBtn} onClick={() => setShowAdd(true)}>
-         Add Spend
-      </button>
+      {/* Grid for two buttons */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
+        <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>
+          Add Spend
+        </button>
+        <button style={{ ...addBtn, marginTop: 0, background: "#3b82f6" }} onClick={() => setShowAddMoney(true)}>
+          Add/Pay Money
+        </button>
+      </div>
 
       <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}
-      filterDate={filterDate} setFilterDate={setFilterDate} fetchLogs={fetchLogs}/>
-      <FriendList friendsLogs={friendsLogs}/>
-      {friendsLogs.length === 0 && <p style={{opacity:0.5}}>No friends activity yet.</p>}
-
+        filterDate={filterDate} setFilterDate={setFilterDate} fetchLogs={fetchLogs} />
+      
+      <FriendList friendsLogs={friendsLogs} />
+      
       {showAdd && (
-        <AddSpendModal amount={amount} setAmount={setAmount} desc={desc} setDesc={setDesc} addSpend={addSpend} setShowAdd={setShowAdd}/>
+        <AddSpendModal amount={amount} setAmount={setAmount} desc={desc} setDesc={setDesc} addSpend={addSpend} setShowAdd={setShowAdd} />
+      )}
+
+      {/* New Modal Trigger */}
+      {showAddMoney && (
+        <AddMoneyModal 
+          userId={userId} 
+          balances={balances} 
+          setBalances={setBalances} 
+          setShowAddMoney={setShowAddMoney} 
+        />
       )}
     </div>
   );
