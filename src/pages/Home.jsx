@@ -2,16 +2,43 @@ import React, { useState, useEffect } from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { supabase } from "../lib/supabase"; 
 
-const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
+const Home = () => {
   const [logs, setLogs] = useState([]);
+  const [profile, setProfile] = useState({ first_name: "User", dailyLimit: 150 });
   const [expandedId, setExpandedId] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchLogs();
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = "/";
+        return;
+      }
+      
+      // Fetch profile and logs
+      fetchProfile(user.id);
+      fetchLogs();
+      setLoading(false);
+    };
+    init();
   }, []);
+
+  const fetchProfile = async (userId) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('first_name, daily_limit')
+      .eq('id', userId)
+      .single();
+    
+    if (data) setProfile({ 
+      first_name: data.first_name || "User", 
+      dailyLimit: data.daily_limit || 150 
+    });
+  };
 
   const fetchLogs = async () => {
     const { data, error } = await supabase
@@ -25,27 +52,15 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
 
   const addSpend = async () => {
     if (!amount || !desc) return;
-    
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        alert("You must be logged in to save!");
-        return;
-    }
-
+    
     const { data, error } = await supabase
         .from('expenses')
-        .insert([{ 
-          amount: Number(amount), 
-          description: desc,
-          user_id: user.id
-        }])
+        .insert([{ amount: Number(amount), description: desc, user_id: user.id }])
         .select();
 
-    if (error) {
-        console.error("Supabase Error:", error);
-        alert("Failed to save: " + error.message);
-    } else {
-        // Refresh the list to ensure we get the created_at from the DB
+    if (error) alert("Failed to save: " + error.message);
+    else {
         fetchLogs(); 
         setAmount(""); setDesc(""); setShowAdd(false);
     }
@@ -56,6 +71,8 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
     if (!error) setLogs(logs.filter((l) => l.id !== id));
   };
 
+  if (loading) return <div style={{ padding: "50px", textAlign: "center", color: "white" }}>Loading...</div>;
+
   const totalSpent = logs.reduce((acc, curr) => acc + Number(curr.amount), 0);
   const remaining = profile.dailyLimit - totalSpent;
 
@@ -64,15 +81,13 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
       <div style={headerSectionStyle}>
         <div style={avatarStyle}></div>
         <p style={greetingStyle}>
-          Hi <strong>{profile.name}</strong>, today you have ${remaining > 0 ? remaining : 0} remaining.
+          Hi <strong>{profile.first_name}</strong>, today you have ${remaining > 0 ? remaining : 0} remaining.
         </p>
       </div>
 
       <div style={cardStyle}>
         <p style={{ margin: 0, fontSize: "0.8rem", opacity: 0.6 }}>Spent Today</p>
-        <h1 style={{ margin: "5px 0", color: remaining < 0 ? "#ef4444" : "#10b981" }}>
-          ${totalSpent}
-        </h1>
+        <h1 style={{ margin: "5px 0", color: remaining < 0 ? "#ef4444" : "#10b981" }}>${totalSpent}</h1>
       </div>
 
       <button style={addBtn} onClick={() => setShowAdd(true)}><Plus size={18} /> Add Spend</button>
@@ -98,12 +113,9 @@ const Home = ({ profile = { name: "User", dailyLimit: 150 } }) => {
             <span>{log.description}</span>
             <strong>${log.amount}</strong>
           </div>
-          
-          {/* Date display added here */}
           <div style={{ fontSize: '0.7rem', opacity: 0.5, marginTop: '5px' }}>
             {log.created_at ? new Date(log.created_at).toLocaleString() : 'Just now'}
           </div>
-
           {expandedId === log.id && (
             <div style={expandedDetailsStyle}>
               <button style={deleteBtnStyle} onClick={(e) => { e.stopPropagation(); deleteLog(log.id); }}>
