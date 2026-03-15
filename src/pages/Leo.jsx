@@ -66,7 +66,7 @@ const Leo = () => {
         </div>
       </div>
 
-      <div style={{...dashboardSectionStyle, paddingBottom:'5vh'}}>
+      <div style={{...dashboardSectionStyle, paddingBottom:'25vh'}}>
         <div style={cardStyle}>
           <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
             <Brain size={18} color="#10b981" /> <strong>Leo Insight</strong>
