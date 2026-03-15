@@ -15,16 +15,15 @@ const Home = () => {
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    const init = async () => {
-      fetchFriendsActivity();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-      fetchProfile(user.id);
-      fetchLogs(filterDate);
-      setLoading(false);
-    };
     init();
   }, []);
+
+  const init = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+    await Promise.all([fetchProfile(user.id), fetchLogs(filterDate), fetchFriendsActivity()]);
+    setLoading(false);
+  };
 
   const fetchProfile = async (userId) => {
     const { data } = await supabase.from('profiles').select('first_name, daily_limit').eq('id', userId).single();
@@ -40,27 +39,23 @@ const Home = () => {
 
   const fetchFriendsActivity = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    const { data: friends } = await supabase.from('friendships').select('id, friend_name').eq('user_id', user.id);
+    const { data: friends } = await supabase.from('friendships').select('id').eq('user_id', user.id);
     if (friends?.length > 0) {
-      const { data: logs } = await supabase.from('friend_logs').select('*').in('friendship_id', friends.map(f => f.id)).order('time_logged', { ascending: false });
-      setFriendsLogs(logs || []);
+      const { data } = await supabase.from('friend_logs').select('*').in('friendship_id', friends.map(f => f.id)).order('time_logged', { ascending: false });
+      setFriendsLogs(data || []);
     }
   };
 
-  const deleteLog = async (id) => {
-    const { error } = await supabase.from('expenses').delete().eq('id', id);
-    if (!error) setLogs(logs.filter((l) => l.id !== id));
-  };
-
-  if (loading) return <div style={loadingStyle}>Loading...</div>;
+  if (loading) return <div className="page-container">Loading...</div>;
 
   return (
-    <div style={pageStyle}>
+    <div className="page-container">
       <UserStats profile={profile} logs={logs} filterDate={filterDate} onDateChange={(d) => {setFilterDate(d); fetchLogs(d);}} />
-      <button style={addBtn} onClick={() => setShowAdd(true)}><Plus size={18} /> Add Spend</button>
-      <ExpenseList logs={logs} onDelete={deleteLog} />
+      <button className="btn-primary" onClick={() => setShowAdd(true)}><Plus size={18} /> Add Spend</button>
+      <ExpenseList logs={logs} setLogs={setLogs} />
       <FriendList friendsLogs={friendsLogs} />
       {showAdd && <AddSpendModal onClose={() => setShowAdd(false)} onSave={() => { fetchLogs(filterDate); setShowAdd(false); }} />}
     </div>
   );
 };
+export default Home;
