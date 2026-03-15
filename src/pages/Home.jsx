@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Calendar } from "lucide-react";
 import { supabase } from "../lib/supabase"; 
 
 const Home = () => {
@@ -10,11 +10,25 @@ const Home = () => {
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showAll, setShowAll] = useState(false);
+  
+  // Initialize with today's date in YYYY-MM-DD format
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = "/";
+        return;
+      }
+      fetchProfile(user.id);
+      fetchLogs(filterDate);
+      setLoading(false);
+    };
+    init();
+  }, []);
 
-    const fetchProfile = async (userId) => {
+  const fetchProfile = async (userId) => {
     const { data } = await supabase
       .from('profiles')
       .select('first_name, daily_limit')
@@ -27,47 +41,35 @@ const Home = () => {
     });
   };
 
-    const fetchLogs = async () => {
-    // Get the start of the current day (00:00:00) in the local timezone
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const startOfToday = today.toISOString();
+  const fetchLogs = async (dateStr) => {
+    // Define start and end of the selected day for the query
+    const start = new Date(dateStr);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(dateStr);
+    end.setHours(23, 59, 59, 999);
 
     const { data, error } = await supabase
       .from('expenses')
       .select('*')
-      .gte('created_at', startOfToday) // Only show records from today onwards
+      .gte('created_at', start.toISOString())
+      .lte('created_at', end.toISOString())
       .order('created_at', { ascending: false });
     
-    if (error) console.error("Error fetching:", error);
+    if (error) console.error("Error fetching logs:", error);
     else setLogs(data || []);
   };
-
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        window.location.href = "/";
-        return;
-      }
-      fetchProfile(user.id);
-      fetchLogs();
-      setLoading(false);
-    };
-    init();
-  }, []);
 
   const addSpend = async () => {
     if (!amount || !desc) return;
     const { data: { user } } = await supabase.auth.getUser();
     
-    const { data, error } = await supabase
+    const { error } = await supabase
         .from('expenses')
-        .insert([{ amount: Number(amount), description: desc, user_id: user.id }])
-        .select();
+        .insert([{ amount: Number(amount), description: desc, user_id: user.id }]);
 
     if (error) alert("Failed to save: " + error.message);
     else {
-        fetchLogs(); 
+        fetchLogs(filterDate); 
         setAmount(""); setDesc(""); setShowAdd(false);
     }
   };
@@ -77,25 +79,10 @@ const Home = () => {
     if (!error) setLogs(logs.filter((l) => l.id !== id));
   };
 
-  if (loading) return <div style={{ padding: "50px", textAlign: "center", color: "white" }}>Loading...</div>;
+  if (loading) return <div style={loadingStyle}>Loading...</div>;
 
   const totalSpent = logs.reduce((acc, curr) => acc + Number(curr.amount), 0);
   const remaining = profile.dailyLimit - totalSpent;
-  
-  const fetchLogs = async (includeAll = false) => {
-  let query = supabase.from('expenses').select('*');
-  
-  if (!includeAll) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    query = query.gte('created_at', today.toISOString());
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false });
-  
-  if (error) console.error("Error fetching:", error);
-  else setLogs(data || []);
-};
 
   return (
     <div style={pageStyle}>
@@ -107,41 +94,27 @@ const Home = () => {
       </div>
 
       <div style={cardStyle}>
-        <p style={{ margin: 0, fontSize: "0.8rem", opacity: 0.6 }}>Spent Today</p>
-        <h1 style={{ margin: "5px 0", color: remaining < 0 ? "#ef4444" : "#10b981" }}>${totalSpent}</h1>
+        <p style={{ margin: 0, fontSize: "0.8rem", opacity: 0.6 }}>Spent on {filterDate}</p>
+        <h1 style={{ margin: "5px 0", color: "#10b981" }}>${totalSpent}</h1>
       </div>
 
       <button style={addBtn} onClick={() => setShowAdd(true)}><Plus size={18} /> Add Spend</button>
 
-      {showAdd && (
-        <div style={overlayStyle}>
-          <div style={modal}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
-              <h3>Add Spend</h3>
-              <X size={20} onClick={() => setShowAdd(false)} style={{ cursor: "pointer" }} />
-            </div>
-            <input style={input} type="number" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <input style={input} placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
-            <button style={saveBtn} onClick={addSpend}>Save Entry</button>
-          </div>
-        </div>
-      )}
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '25px' }}>
-        <h3>Your Activity</h3>
-        <button 
-          style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '0.8rem' }}
-          onClick={() => {
-            const nextShowAll = !showAll;
-            setShowAll(nextShowAll);
-            fetchLogs(nextShowAll);
+      {/* Calendar Filter UI */}
+      <div style={{ marginTop: "25px", display: "flex", alignItems: "center", gap: "10px" }}>
+        <Calendar size={18} color="#10b981" />
+        <input 
+          type="date" 
+          value={filterDate} 
+          onChange={(e) => {
+            setFilterDate(e.target.value);
+            fetchLogs(e.target.value);
           }}
-        >
-          {showAll ? "Show Today Only" : "Show All History"}
-        </button>
+          style={dateInputStyle}
+        />
       </div>
 
-      <h3 style={{ marginTop: "25px" }}>Your Activity</h3>
+      <h3 style={{ marginTop: "20px" }}>Activity</h3>
       {logs.map((log) => (
         <div key={log.id} style={logItemStyle} onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}>
           <div style={logHeaderStyle}>
@@ -149,7 +122,7 @@ const Home = () => {
             <strong>${log.amount}</strong>
           </div>
           <div style={{ fontSize: '0.7rem', opacity: 0.5, marginTop: '5px' }}>
-            {log.created_at ? new Date(log.created_at).toLocaleString() : 'Just now'}
+            {new Date(log.created_at).toLocaleString('en-PH', { timeZone: 'Asia/Manila' })}
           </div>
           {expandedId === log.id && (
             <div style={expandedDetailsStyle}>
@@ -160,16 +133,33 @@ const Home = () => {
           )}
         </div>
       ))}
+      
+      {/* Modal for adding spend */}
+      {showAdd && (
+        <div style={overlayStyle}>
+          <div style={modal}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
+              <h3>Add Spend</h3>
+              <X size={20} onClick={() => setShowAdd(false)} style={{ cursor: "pointer" }} />
+            </div>
+            <input style={input} type="number" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <input style={input} placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
+            <button style={saveBtn} onClick={addSpend}>Save Entry</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 /* --- Styles --- */
-const pageStyle = { padding: "20px", maxWidth: "600px", margin: "auto" };
+const pageStyle = { padding: "20px", maxWidth: "600px", margin: "auto", color: "white" };
+const loadingStyle = { padding: "50px", textAlign: "center", color: "white" };
 const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "25px", alignItems: "center" };
 const avatarStyle = { width: "60px", height: "60px", borderRadius: "50%", background: "linear-gradient(45deg,#10b981,#064e3b)" };
 const greetingStyle = { fontSize: "0.9rem", lineHeight: "1.4" };
 const cardStyle = { background: "#111", padding: "20px", borderRadius: "18px", border: "1px solid #222" };
+const dateInputStyle = { background: "#111", border: "1px solid #333", color: "white", padding: "8px", borderRadius: "8px", cursor: "pointer", fontSize: "0.9rem" };
 const logItemStyle = { background: "#111", padding: "15px", borderRadius: "12px", border: "1px solid #222", marginBottom: "10px", cursor: "pointer" };
 const logHeaderStyle = { display: "flex", justifyContent: "space-between" };
 const expandedDetailsStyle = { marginTop: "10px", borderTop: "1px solid #333", paddingTop: "10px" };
