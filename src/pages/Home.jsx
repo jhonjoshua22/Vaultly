@@ -9,6 +9,13 @@ import AddSpendModal from "./AddSpendModal";
 import MoneyCredits from "./MoneyCredits";
 import AddMoneyModal from "./AddMoneyModal";
 
+const getPHTDate = () => {
+  const now = new Date();
+  const offset = 8 * 60 * 60 * 1000;
+  const phtDate = new Date(now.getTime() + offset);
+  return phtDate.toISOString().split("T")[0];
+};
+
 const Home = () => {
   const [logs, setLogs] = useState([]);
   const [friendsLogs, setFriendsLogs] = useState([]);
@@ -27,7 +34,7 @@ const Home = () => {
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(true);
-  const [filterDate, setFilterDate] = useState(getPHTDate());
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
@@ -58,6 +65,8 @@ const Home = () => {
       setProfile({ first_name: data.first_name || "User", dailyLimit: data.daily_limit || 150 });
     }
   };
+
+  const [filterDate, setFilterDate] = useState(getPHTDate());
 
   // --- Fetch Expenses
   const fetchLogs = async (dateStr) => {
@@ -157,15 +166,6 @@ const Home = () => {
     setAmount(""); setDesc(""); setShowAdd(false);
     fetchLogs(filterDate);
   };
-
-  const getPHTDate = () => {
-  // Get current time in PHT (UTC+8)
-  const now = new Date();
-  const offset = 8 * 60 * 60 * 1000;
-  const phtDate = new Date(now.getTime() + offset);
-  // Returns YYYY-MM-DD
-  return phtDate.toISOString().split("T")[0];
-};
 
   // --- Delete Expense
   const deleteLog = async (id) => {
