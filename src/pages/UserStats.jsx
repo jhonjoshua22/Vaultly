@@ -22,7 +22,7 @@ const UserStats = ({ profile, remaining, totalSpent, filterDate }) => {
   );
 };
 
-const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "-5vh", alignItems: "center" };
+const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "-2vh", alignItems: "center" };
 
 const avatarStyle = { 
   width: "20vh", 
@@ -32,6 +32,6 @@ const avatarStyle = {
 };
 
 const greetingStyle = { fontSize: "0.9rem", lineHeight: "1.4" };
-const cardStyle = { background: "#111", padding: "20px", borderRadius: "18px", border: "1px solid #222" };
+const cardStyle = { background: "#111", padding: "none", borderRadius: "none", border: "none" };
 
 export default UserStats;
