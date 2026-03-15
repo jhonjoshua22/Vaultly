@@ -22,7 +22,7 @@ const UserStats = ({ profile, remaining, totalSpent, filterDate }) => {
   );
 };
 
-const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "-10vh", alignItems: "center" };
+const headerSectionStyle = { display: "flex", gap: "15px", marginBottom: "-5vh", alignItems: "center" };
 
 const avatarStyle = { 
   width: "20vh", 
