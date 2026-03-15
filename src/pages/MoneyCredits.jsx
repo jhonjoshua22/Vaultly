@@ -128,7 +128,7 @@ const card = {
     cursor: "pointer",
     backgroundSize: "cover",
     backgroundPosition: "center",
-    aspectRatio: "1/1", // Keeps cards square for the 3-column grid
+    aspectRatio: "1.3/1",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center"
