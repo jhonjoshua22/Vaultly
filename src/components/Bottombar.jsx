@@ -2,50 +2,46 @@ import React from 'react';
 import { Home, Shield, Archive, User } from 'lucide-react';
 
 const Bottombar = ({ activeTab, setActiveTab }) => {
+  const tabs = [
+    { key: 'Home', icon: <Home size={22} />, label: 'Home' },
+    { key: 'Leo', icon: <Shield size={22} />, label: 'Leo' },
+    { key: 'Planner', icon: <Archive size={22} />, label: 'Planner' },
+    { key: 'Profile', icon: <User size={22} />, label: 'Profile' },
+  ];
+
   return (
     <nav style={bottomBarStyle}>
-      <TabItem 
-        icon={<Home size={22}/>} 
-        label="Home" 
-        active={activeTab === 'Home'} 
-        onClick={() => setActiveTab('Home')} 
-      />
-      <TabItem 
-        icon={<Shield size={22}/>} 
-        label="Leo" 
-        active={activeTab === 'Leo'} 
-        onClick={() => setActiveTab('Leo')} 
-      />
-      <TabItem 
-        icon={<Archive size={22}/>} 
-        label="Planner" 
-        active={activeTab === 'Planner'} 
-        onClick={() => setActiveTab('Planner')} 
-      />
-      <TabItem 
-        icon={<User size={22}/>} 
-        label="Profile" 
-        active={activeTab === 'Profile'} 
-        onClick={() => setActiveTab('Profile')} 
-      />
+      {tabs.map(tab => (
+        <TabItem
+          key={tab.key}
+          icon={tab.icon}
+          label={tab.label}
+          active={activeTab === tab.key}
+          onClick={() => setActiveTab(tab.key)}
+        />
+      ))}
     </nav>
   );
 };
 
-// Internal Helper for Tab Buttons
 function TabItem({ icon, label, active, onClick }) {
   return (
-    <div onClick={onClick} style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      gap: '5px', 
-      cursor: 'pointer', 
-      color: active ? '#10b981' : '#555',
-      transition: 'color 0.2s ease'
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '5px',
+        cursor: 'pointer',
+        color: active ? '#10b981' : '#555',
+        transition: 'color 0.2s ease',
+      }}
+    >
       {icon}
-      <span style={{ fontSize: '0.7rem', fontWeight: active ? '600' : '400' }}>{label}</span>
+      <span style={{ fontSize: '0.7rem', fontWeight: active ? 600 : 400 }}>
+        {label}
+      </span>
     </div>
   );
 }
@@ -62,7 +58,7 @@ const bottomBarStyle = {
   justifyContent: 'space-around',
   alignItems: 'center',
   paddingBottom: '10px',
-  zIndex: 100
+  zIndex: 100,
 };
 
 export default Bottombar;
