@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Layout Components
 import Topbar from './components/Topbar';
@@ -16,15 +15,14 @@ import AuthCallback from './pages/AuthCallback';
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Home'); // ✅ Active tab state
 
   useEffect(() => {
-    // 1. Initial Session Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // 2. Auth Listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -32,7 +30,6 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Handle URL-based auth callback
   if (window.location.pathname === '/auth/callback') return <AuthCallback />;
 
   if (loading) return <div style={centerStyle}>Loading...</div>;
@@ -53,28 +50,27 @@ function App() {
   }
 
   return (
-    <Router>
-      <div style={appContainerStyle}>
-        <div style={mobileWrapperStyle}>
-          <Topbar />
-          <main style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
-            <div style={{ display: activeTab === 'Home' ? 'block' : 'none', transition: 'opacity 0.3s' }}>
-              <Home />
-            </div>
-            <div style={{ display: activeTab === 'Leo' ? 'block' : 'none', transition: 'opacity 0.3s' }}>
-              <Leo />
-            </div>
-            <div style={{ display: activeTab === 'Planner' ? 'block' : 'none', transition: 'opacity 0.3s' }}>
-              <Planner />
-            </div>
-            <div style={{ display: activeTab === 'Profile' ? 'block' : 'none', transition: 'opacity 0.3s' }}>
-              <Profile />
-            </div>
-          </main>
-          <Bottombar />
-        </div>
+    <div style={appContainerStyle}>
+      <div style={mobileWrapperStyle}>
+        <Topbar />
+        <main style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+          {/* Keep all pages mounted and show/hide via display */}
+          <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>
+            <Home />
+          </div>
+          <div style={{ display: activeTab === 'Leo' ? 'block' : 'none' }}>
+            <Leo />
+          </div>
+          <div style={{ display: activeTab === 'Planner' ? 'block' : 'none' }}>
+            <Planner />
+          </div>
+          <div style={{ display: activeTab === 'Profile' ? 'block' : 'none' }}>
+            <Profile />
+          </div>
+        </main>
+        <Bottombar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
-    </Router>
+    </div>
   );
 }
 
