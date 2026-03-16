@@ -21,28 +21,27 @@
 }
 
 .step-circle-container {
+  margin-left: auto;
+  margin-right: auto;
   width: 100%;
-  max-width: 100%; /* Fill parent (form box) */
-  padding: 1rem 0; /* Top/bottom padding */
-  display: flex;
-  justify-content: center; /* center circles horizontally */
-  border-radius: 1rem;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  background-color: transparent; /* don't clash with green box */
-  margin-bottom: 2rem; /* space from inputs */
+  max-width: 28rem;
+  border-radius: 2rem;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .step-indicator-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between; /* distribute circles evenly */
   width: 100%;
-  padding: 0; /* remove extra padding */
+  align-items: center;
+  padding: 2rem;
 }
 
 .step-content-default {
   position: relative;
   overflow: hidden;
+  min-height: 200px; /* force content to show */
 }
 
 .step-default {
@@ -116,23 +115,14 @@
 }
 
 .step-indicator-inner {
-  height: 2.5rem; /* slightly bigger */
-  width: 2.5rem;
   display: flex;
+  height: 2rem;
+  width: 2rem;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 9999px;
   font-weight: 600;
-  background-color: #10b981; /* green palette */
-  color: #064e3b;
-  z-index: 1;
 }
-
-.step-indicator-inner.active {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
 
 .active-dot {
   height: 0.75rem;
@@ -146,16 +136,21 @@
 }
 
 .step-connector {
-  height: 0.25rem;
+  position: relative;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  height: 0.125rem;
   flex: 1;
-  margin: 0 0.5rem;
-  border-radius: 0.125rem;
-  background-color: #064e3b; /* green dark */
+  overflow: hidden;
+  border-radius: 0.25rem;
+  background-color: #52525b;
 }
 
 .step-connector-inner {
+  position: absolute;
+  left: 0;
+  top: 0;
   height: 100%;
-  background-color: #10b981; /* bright green */
 }
 
 .check-icon {
@@ -163,4 +158,3 @@
   width: 1rem;
   color: #fff;
 }
-
