@@ -10,11 +10,8 @@ import MoneyCredits from "./MoneyCredits";
 import AddMoneyModal from "./AddMoneyModal";
 import PixelSnow from '../components/PixelSnow/PixelSnow';
 
-
-// Helper outside component to prevent re-instantiation
 const getPHTDate = () => {
   const now = new Date();
-  // UTC+8 offset in milliseconds
   const offset = 8 * 60 * 60 * 1000;
   const phtDate = new Date(now.getTime() + offset);
   return phtDate.toISOString().split("T")[0];
@@ -24,17 +21,27 @@ const Home = () => {
   const [logs, setLogs] = useState([]);
   const [friendsLogs, setFriendsLogs] = useState([]);
   const [profile, setProfile] = useState({ first_name: "User", dailyLimit: 150 });
+
   const [balances, setBalances] = useState({
     gcash: 0,
     cash: 0,
     bdoSavings: 0,
     bdoCredit: 0,
+    bpiSavings: 0,
+    bpiCredit: 0,
+    eastwestSavings: 0,
     eastwestCredit: 0,
+    rcbcSavings: 0,
+    rcbcCredit: 0,
+    unionbankSavings: 0,
+    unionbankCredit: 0,
+    metrobankSavings: 0,
+    metrobankCredit: 0,
   });
-  
+
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filterDate, setFilterDate] = useState(getPHTDate()); // Corrected init
+  const [filterDate, setFilterDate] = useState(getPHTDate());
   const [showAdd, setShowAdd] = useState(false);
   const [showAddMoney, setShowAddMoney] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
@@ -70,7 +77,6 @@ const Home = () => {
   };
 
   const fetchLogs = async (dateStr) => {
-    // Explicit ISO range for PHT
     const start = `${dateStr}T00:00:00.000+08:00`;
     const end = `${dateStr}T23:59:59.999+08:00`;
 
@@ -80,7 +86,7 @@ const Home = () => {
       .gte("created_at", start)
       .lte("created_at", end)
       .order("created_at", { ascending: false });
-    
+
     setLogs(data || []);
   };
 
@@ -89,13 +95,16 @@ const Home = () => {
       .from("friendships")
       .select("id, friend_name")
       .eq("user_id", id);
+
     if (friends?.length > 0) {
       const friendIds = friends.map(f => f.id);
+
       const { data } = await supabase
         .from("friend_logs")
         .select("*, friendships(friend_name)")
         .in("friendship_id", friendIds)
         .order("time_logged", { ascending: false });
+
       setFriendsLogs(data || []);
     }
   };
@@ -106,13 +115,23 @@ const Home = () => {
       .select("*")
       .eq("user_id", id)
       .single();
+
     if (data) {
       setBalances({
         gcash: Number(data.gcash),
         cash: Number(data.cash),
         bdoSavings: Number(data.bdo_savings),
         bdoCredit: Number(data.bdo_credit),
+        bpiSavings: Number(data.bpi_savings),
+        bpiCredit: Number(data.bpi_credit),
+        eastwestSavings: Number(data.eastwest_savings),
         eastwestCredit: Number(data.eastwest_credit),
+        rcbcSavings: Number(data.rcbc_savings),
+        rcbcCredit: Number(data.rcbc_credit),
+        unionbankSavings: Number(data.unionbank_savings),
+        unionbankCredit: Number(data.unionbank_credit),
+        metrobankSavings: Number(data.metrobank_savings),
+        metrobankCredit: Number(data.metrobank_credit),
       });
     }
   };
@@ -130,35 +149,70 @@ const Home = () => {
       .select("*")
       .eq("user_id", userId)
       .single();
-    
+
     if (currentBalance) {
       const updated = {
         gcash: Number(currentBalance.gcash),
         cash: Number(currentBalance.cash),
         bdoSavings: Number(currentBalance.bdo_savings),
         bdoCredit: Number(currentBalance.bdo_credit),
+        bpiSavings: Number(currentBalance.bpi_savings),
+        bpiCredit: Number(currentBalance.bpi_credit),
+        eastwestSavings: Number(currentBalance.eastwest_savings),
         eastwestCredit: Number(currentBalance.eastwest_credit),
+        rcbcSavings: Number(currentBalance.rcbc_savings),
+        rcbcCredit: Number(currentBalance.rcbc_credit),
+        unionbankSavings: Number(currentBalance.unionbank_savings),
+        unionbankCredit: Number(currentBalance.unionbank_credit),
+        metrobankSavings: Number(currentBalance.metrobank_savings),
+        metrobankCredit: Number(currentBalance.metrobank_credit),
       };
 
       if (paymentMethod === "gcash") updated.gcash -= amountNum;
       if (paymentMethod === "cash") updated.cash -= amountNum;
+
       if (paymentMethod === "bdoSavings") updated.bdoSavings -= amountNum;
       if (paymentMethod === "bdoCredit") updated.bdoCredit += amountNum;
+
+      if (paymentMethod === "bpiSavings") updated.bpiSavings -= amountNum;
+      if (paymentMethod === "bpiCredit") updated.bpiCredit += amountNum;
+
+      if (paymentMethod === "eastwestSavings") updated.eastwestSavings -= amountNum;
       if (paymentMethod === "eastwestCredit") updated.eastwestCredit += amountNum;
+
+      if (paymentMethod === "rcbcSavings") updated.rcbcSavings -= amountNum;
+      if (paymentMethod === "rcbcCredit") updated.rcbcCredit += amountNum;
+
+      if (paymentMethod === "unionbankSavings") updated.unionbankSavings -= amountNum;
+      if (paymentMethod === "unionbankCredit") updated.unionbankCredit += amountNum;
+
+      if (paymentMethod === "metrobankSavings") updated.metrobankSavings -= amountNum;
+      if (paymentMethod === "metrobankCredit") updated.metrobankCredit += amountNum;
 
       await supabase.from("balances").update({
         gcash: updated.gcash,
         cash: updated.cash,
         bdo_savings: updated.bdoSavings,
         bdo_credit: updated.bdoCredit,
+        bpi_savings: updated.bpiSavings,
+        bpi_credit: updated.bpiCredit,
+        eastwest_savings: updated.eastwestSavings,
         eastwest_credit: updated.eastwestCredit,
+        rcbc_savings: updated.rcbcSavings,
+        rcbc_credit: updated.rcbcCredit,
+        unionbank_savings: updated.unionbankSavings,
+        unionbank_credit: updated.unionbankCredit,
+        metrobank_savings: updated.metrobankSavings,
+        metrobank_credit: updated.metrobankCredit,
         updated_at: new Date().toISOString()
       }).eq("user_id", userId);
 
       setBalances(updated);
     }
 
-    setAmount(""); setDesc(""); setShowAdd(false);
+    setAmount("");
+    setDesc("");
+    setShowAdd(false);
     fetchLogs(filterDate);
   };
 
@@ -174,28 +228,26 @@ const Home = () => {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', width: '100%' }}>
-      {/* Background Snow Layer */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        width: '100%', 
-        height: '100%', 
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
         zIndex: 0,
-        pointerEvents: 'none' // Important: ensures clicks pass through to buttons
+        pointerEvents: 'none'
       }}>
-        <PixelSnow 
+        <PixelSnow
           color="#10b981"
           flakeSize={0.01}
           minFlakeSize={1.25}
           pixelResolution={200}
-          speed={0.5} // Slightly slower for a subtle home background
-          density={0.1} // Lower density so it's not distracting
+          speed={0.5}
+          density={0.1}
           variant="square"
         />
       </div>
 
-      {/* Foreground Content Layer */}
       <div style={{ ...pageStyle, position: 'relative', zIndex: 1 }}>
         <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
         <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
@@ -207,9 +259,9 @@ const Home = () => {
 
         <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}
           filterDate={filterDate} setFilterDate={setFilterDate} fetchLogs={fetchLogs} />
-        
+
         <FriendList friendsLogs={friendsLogs} />
-        
+
         {showAdd && <AddSpendModal amount={amount} setAmount={setAmount} desc={desc} setDesc={setDesc} addSpend={addSpend} setShowAdd={setShowAdd} />}
         {showAddMoney && <AddMoneyModal userId={userId} balances={balances} setBalances={setBalances} setShowAddMoney={setShowAddMoney} />}
       </div>
