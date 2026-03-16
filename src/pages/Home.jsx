@@ -8,7 +8,7 @@ import UserStats from "./UserStats";
 import AddSpendModal from "./AddSpendModal";
 import MoneyCredits from "./MoneyCredits";
 import AddMoneyModal from "./AddMoneyModal";
-import PixelSnow from './components/PixelSnow/PixelSnow';
+import PixelSnow from '../components/PixelSnow/PixelSnow';
 
 
 // Helper outside component to prevent re-instantiation
