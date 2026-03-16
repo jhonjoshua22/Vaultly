@@ -33,20 +33,24 @@ const Onboarding = ({ user, onComplete }) => {
 
   return (
     <div style={containerStyle}>
-      <h2>Complete your details</h2>
+      <h2 style={{ alignSelf: 'flex-start' }}>Complete your details</h2>
       
-      <input 
-        placeholder="First Name" 
-        value={profile.first_name}
-        onChange={e => setProfile({...profile, first_name: e.target.value})} 
-        style={inputStyle} 
-      />
-      <input 
-        placeholder="Last Name" 
-        value={profile.last_name}
-        onChange={e => setProfile({...profile, last_name: e.target.value})} 
-        style={inputStyle} 
-      />
+      {/* Name row side-by-side */}
+      <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+        <input 
+          placeholder="First Name" 
+          value={profile.first_name}
+          onChange={e => setProfile({...profile, first_name: e.target.value})} 
+          style={{ ...inputStyle, flex: 1 }} 
+        />
+        <input 
+          placeholder="Last Name" 
+          value={profile.last_name}
+          onChange={e => setProfile({...profile, last_name: e.target.value})} 
+          style={{ ...inputStyle, flex: 1 }} 
+        />
+      </div>
+
       <input 
         type="number" 
         placeholder="Daily Limit" 
@@ -55,7 +59,7 @@ const Onboarding = ({ user, onComplete }) => {
         style={inputStyle} 
       />
       
-      <h3>Savings Accounts</h3>
+      <h3 style={{ marginTop: '20px' }}>Savings Accounts</h3>
       <AccountAdder 
         options={bankOptions} 
         onAdd={(t, a) => setSavings([...savings, { type: t, amount: a }])} 
@@ -80,7 +84,7 @@ const AccountAdder = ({ options, onAdd }) => {
 
   return (
     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-      <select onChange={e => setType(e.target.value)} style={inputStyle}>
+      <select onChange={e => setType(e.target.value)} style={selectStyle}>
         {options.map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
       </select>
       <input 
@@ -90,12 +94,7 @@ const AccountAdder = ({ options, onAdd }) => {
         onChange={e => setAmount(e.target.value)} 
         style={inputStyle} 
       />
-      <button 
-        onClick={() => { if(amount) { onAdd(type, amount); setAmount(''); } }} 
-        style={addBtn}
-      >
-        Add
-      </button>
+      <button onClick={() => { if(amount) { onAdd(type, amount); setAmount(''); } }} style={addBtn}>Add</button>
     </div>
   );
 };
@@ -110,25 +109,30 @@ const ListDisplay = ({ items }) => (
   </ul>
 );
 
-// Styles
+// Styles updated for left-alignment
 const containerStyle = { 
   minHeight: '100vh', 
   display: 'flex', 
   flexDirection: 'column', 
-  alignItems: 'center', 
+  alignItems: 'flex-start', // Changed from center to flex-start
   padding: '2rem', 
   backgroundColor: '#000', 
-  color: '#fff' 
+  color: '#fff',
+  maxWidth: '500px', // Constrain width for better reading
+  margin: '0 auto'
 };
 
 const inputStyle = { 
   padding: '10px', 
-  margin: '5px', 
+  margin: '5px 0', 
   borderRadius: '6px', 
   border: '1px solid #333', 
   background: '#1a1a1a', 
-  color: '#fff' 
+  color: '#fff',
+  width: '100%' 
 };
+
+const selectStyle = { ...inputStyle, width: 'auto' };
 
 const submitBtn = { 
   padding: '12px 24px', 
@@ -141,7 +145,7 @@ const submitBtn = {
 };
 
 const addBtn = { 
-  padding: '10px', 
+  padding: '10px 15px', 
   background: '#3b82f6', 
   color: '#fff', 
   border: 'none', 
