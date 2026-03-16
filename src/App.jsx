@@ -12,6 +12,8 @@ import Leo from './pages/Leo';
 import Planner from './pages/Planner';
 import Profile from './pages/Profile';
 import AuthCallback from './pages/AuthCallback';
+import Onboarding from './pages/Onboarding';
+
 
 function App() {
   const [session, setSession] = useState(null);
@@ -74,6 +76,8 @@ function App() {
           <div style={{ display: activeTab === 'Leo' ? 'block' : 'none' }}><Leo /></div>
           <div style={{ display: activeTab === 'Planner' ? 'block' : 'none' }}><Planner /></div>
           <div style={{ display: activeTab === 'Profile' ? 'block' : 'none' }}><Profile /></div>
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
         </main>
         <Bottombar activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>

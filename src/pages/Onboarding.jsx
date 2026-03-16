@@ -1,116 +1,175 @@
-import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
-import { useNavigate } from "react-router-dom";
-import Stepper, { Step } from "../components/Stepper";
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import Stepper, { Step } from '../components/Stepper';
 
 const Onboarding = () => {
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
-    first_name: "",
-    last_name: "",
-    daily_limit: 150
-  });
-
-  const [balances, setBalances] = useState({
-    cash: 0,
+    first_name: '',
+    last_name: '',
+    age: '',
+    daily_limit: 150,
+    // savings
     gcash: 0,
+    cash: 0,
     bdo_savings: 0,
-    eastwest_savings: 0,
     unionbank_savings: 0,
+    eastwest_savings: 0,
     metrobank_savings: 0,
     rcbc_savings: 0,
     bpi_savings: 0,
+    // credit
     bdo_credit: 0,
-    eastwest_credit: 0,
     unionbank_credit: 0,
+    eastwest_credit: 0,
     metrobank_credit: 0,
     rcbc_credit: 0,
     bpi_credit: 0
   });
 
-  const handleProfileChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+  useEffect(() => {
+    const checkProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return navigate('/');
+
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profiles && profiles.first_name) {
+        navigate('/home'); // already filled profile, redirect home
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkProfile();
+  }, [navigate]);
+
+  const handleInputChange = (field, value) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleBalanceChange = (e) => {
-    const value = parseFloat(e.target.value) || 0;
-    setBalances({ ...balances, [e.target.name]: value });
+  const handleSave = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Insert profile if not exists
+    await supabase.from('profiles').upsert({
+      id: session.user.id,
+      first_name: profile.first_name,
+      last_name: profile.last_name,
+      daily_limit: profile.daily_limit,
+      age: profile.age
+    });
+
+    // Insert balances
+    await supabase.from('balances').upsert({
+      user_id: session.user.id,
+      gcash: profile.gcash,
+      cash: profile.cash,
+      bdo_savings: profile.bdo_savings,
+      unionbank_savings: profile.unionbank_savings,
+      eastwest_savings: profile.eastwest_savings,
+      metrobank_savings: profile.metrobank_savings,
+      rcbc_savings: profile.rcbc_savings,
+      bpi_savings: profile.bpi_savings,
+      bdo_credit: profile.bdo_credit,
+      unionbank_credit: profile.unionbank_credit,
+      eastwest_credit: profile.eastwest_credit,
+      metrobank_credit: profile.metrobank_credit,
+      rcbc_credit: profile.rcbc_credit,
+      bpi_credit: profile.bpi_credit
+    });
+
+    navigate('/home');
   };
 
-  const completeOnboarding = async () => {
-    try {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) throw new Error("No user session found.");
-
-      const userId = data.user.id;
-
-      // insert profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert([{ id: userId, ...profile, daily_limit: parseFloat(profile.daily_limit) || 150 }]);
-      if (profileError) throw profileError;
-
-      // insert balances
-      const { error: balancesError } = await supabase
-        .from("balances")
-        .insert([{ user_id: userId, ...balances }]);
-      if (balancesError) throw balancesError;
-
-      // everything ok → redirect to home
-      navigate("/home");
-
-    } catch (err) {
-      console.error("Onboarding error:", err.message);
-      alert("Failed to complete onboarding. Try again.");
-    }
-  };
+  if (loading) return <div style={centerStyle}>Loading...</div>;
 
   return (
-    <div style={{ padding: 40, maxWidth: 500, margin: "0 auto" }}>
-      <Stepper initialStep={1} onFinalStepCompleted={completeOnboarding}>
+    <div style={{ ...centerStyle, padding: '1rem' }}>
+      <h1>Welcome! Let's set up your account</h1>
 
+      <Stepper
+        initialStep={1}
+        onFinalStepCompleted={handleSave}
+        backButtonText="Previous"
+        nextButtonText="Next"
+      >
         <Step>
-          <h2>Welcome!</h2>
-          <p>Let's set up your financial profile.</p>
-        </Step>
-
-        <Step>
-          <h2>Your Info</h2>
-          <input name="first_name" placeholder="First Name" value={profile.first_name} onChange={handleProfileChange} />
-          <input name="last_name" placeholder="Last Name" value={profile.last_name} onChange={handleProfileChange} />
-          <input name="daily_limit" type="number" placeholder="Daily Limit" value={profile.daily_limit} onChange={handleProfileChange} />
-        </Step>
-
-        <Step>
-          <h2>Cash & Wallet</h2>
-          <input name="cash" type="number" placeholder="Cash" value={balances.cash} onChange={handleBalanceChange} />
-          <input name="gcash" type="number" placeholder="GCash" value={balances.gcash} onChange={handleBalanceChange} />
+          <h2>Basic Info</h2>
+          <input
+            placeholder="First Name"
+            value={profile.first_name}
+            onChange={e => handleInputChange('first_name', e.target.value)}
+          />
+          <input
+            placeholder="Last Name"
+            value={profile.last_name}
+            onChange={e => handleInputChange('last_name', e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Age"
+            value={profile.age}
+            onChange={e => handleInputChange('age', e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Daily Limit"
+            value={profile.daily_limit}
+            onChange={e => handleInputChange('daily_limit', e.target.value)}
+          />
         </Step>
 
         <Step>
           <h2>Savings Accounts</h2>
-          <input name="bdo_savings" type="number" placeholder="BDO Savings" value={balances.bdo_savings} onChange={handleBalanceChange} />
-          <input name="bpi_savings" type="number" placeholder="BPI Savings" value={balances.bpi_savings} onChange={handleBalanceChange} />
-          <input name="rcbc_savings" type="number" placeholder="RCBC Savings" value={balances.rcbc_savings} onChange={handleBalanceChange} />
-          <input name="eastwest_savings" type="number" placeholder="EastWest Savings" value={balances.eastwest_savings} onChange={handleBalanceChange} />
-          <input name="unionbank_savings" type="number" placeholder="UnionBank Savings" value={balances.unionbank_savings} onChange={handleBalanceChange} />
-          <input name="metrobank_savings" type="number" placeholder="Metrobank Savings" value={balances.metrobank_savings} onChange={handleBalanceChange} />
+          {['gcash','cash','bdo_savings','unionbank_savings','eastwest_savings','metrobank_savings','rcbc_savings','bpi_savings'].map(key => (
+            <input
+              key={key}
+              type="number"
+              placeholder={key.replace('_', ' ')}
+              value={profile[key]}
+              onChange={e => handleInputChange(key, e.target.value)}
+            />
+          ))}
         </Step>
 
         <Step>
-          <h2>Credit Cards</h2>
-          <input name="bdo_credit" type="number" placeholder="BDO Credit" value={balances.bdo_credit} onChange={handleBalanceChange} />
-          <input name="bpi_credit" type="number" placeholder="BPI Credit" value={balances.bpi_credit} onChange={handleBalanceChange} />
-          <input name="rcbc_credit" type="number" placeholder="RCBC Credit" value={balances.rcbc_credit} onChange={handleBalanceChange} />
-          <input name="eastwest_credit" type="number" placeholder="EastWest Credit" value={balances.eastwest_credit} onChange={handleBalanceChange} />
-          <input name="unionbank_credit" type="number" placeholder="UnionBank Credit" value={balances.unionbank_credit} onChange={handleBalanceChange} />
-          <input name="metrobank_credit" type="number" placeholder="Metrobank Credit" value={balances.metrobank_credit} onChange={handleBalanceChange} />
+          <h2>Credit Accounts</h2>
+          {['bdo_credit','unionbank_credit','eastwest_credit','metrobank_credit','rcbc_credit','bpi_credit'].map(key => (
+            <input
+              key={key}
+              type="number"
+              placeholder={key.replace('_', ' ')}
+              value={profile[key]}
+              onChange={e => handleInputChange(key, e.target.value)}
+            />
+          ))}
         </Step>
 
+        <Step>
+          <h2>Finish Setup</h2>
+          <p>Click Complete to save your profile and start using the app!</p>
+        </Step>
       </Stepper>
     </div>
   );
 };
 
 export default Onboarding;
+
+/* Styles */
+const centerStyle = {
+  minHeight: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontFamily: 'sans-serif'
+};
