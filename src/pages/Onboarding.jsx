@@ -5,7 +5,7 @@ const bankOptions = ['bdo', 'eastwest', 'unionbank', 'bpi', 'metrobank', 'rcbc',
 const creditOptions = ['bdo', 'eastwest', 'unionbank', 'bpi', 'metrobank', 'rcbc'];
 
 const Onboarding = ({ user, onComplete }) => {
-  const [profile, setProfile] = useState({ first_name: '', last_name: '', age: '', daily_limit: 150 });
+  const [profile, setProfile] = useState({ first_name: '', last_name: '', age: '', daily_limit: '' });
   const [savings, setSavings] = useState([]);
   const [cards, setCards] = useState([]);
 
@@ -25,7 +25,7 @@ const Onboarding = ({ user, onComplete }) => {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
-        <h1 style={{ margin: 0, fontSize: '3rem', color: '#10b981', height: '8vh', display: 'flex', alignItems: 'center' }}>Vaultly</h1>
+        <h1 style={{ margin: 0, fontSize: '5rem', color: '#10b981', height: 'auto', display: 'flex', alignItems: 'center' }}>Vaultly</h1>
       </div>
       
       <h2>Complete your details</h2>
