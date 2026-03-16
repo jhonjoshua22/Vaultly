@@ -69,7 +69,12 @@ function App() {
           <h1 style={{ fontWeight: 'bold', color: '#10b981', fontSize: '4.5rem', marginBottom: '5vh' }}>Vaultly</h1>
           <p style={{ color: '#fff', fontSize: '1rem', marginBottom: '10vh' }}>Simple planning, total control.</p>
           <button
-            onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+            onClick={() =>
+              supabase.auth.signInWithOAuth({ 
+                provider: 'google',
+                options: { redirectTo: 'https://vaultlybyjosh.vercel.app/auth/callback' }
+              })
+            }
             style={loginBtn}
           >
             Login with Google
