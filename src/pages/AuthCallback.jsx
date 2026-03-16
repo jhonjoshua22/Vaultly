@@ -6,11 +6,24 @@ const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase automatically handles the hash/code in the URL
-    // We just need to ensure the session is initialized
-    supabase.auth.getSession().then(() => {
-      navigate('/home'); // Redirect to your app's home screen
-    });
+    const finishLogin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Check if profile exists
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile) {
+        navigate('/home');
+      } else {
+        navigate('/onboarding');
+      }
+    };
+    finishLogin();
   }, [navigate]);
 
   return <div>Finalizing login...</div>;

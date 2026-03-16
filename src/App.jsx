@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import Leo from './pages/Leo';
 import Planner from './pages/Planner';
 import Profile from './pages/Profile';
+import Onboarding from './pages/Onboarding';
 import AuthCallback from './pages/AuthCallback';
 
 function App() {
@@ -19,10 +20,13 @@ function App() {
   const [activeTab, setActiveTab] = useState('Home');
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setLoading(false);
-    });
+    };
+
+    init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -31,13 +35,25 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (window.location.pathname === '/auth/callback') return <AuthCallback />;
   if (loading) return <div style={centerStyle}>Loading...</div>;
 
+  const pathname = window.location.pathname;
+
+  // Auth Callback
+  if (pathname === '/auth/callback') return <AuthCallback />;
+
+  // Onboarding
+  if (pathname === '/onboarding') return (
+    <Onboarding 
+      user={session.user} 
+      onComplete={() => window.location.href = '/'} 
+    />
+  );
+
+  // Not logged in
   if (!session) {
     return (
       <div style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden', backgroundColor: '#000' }}>
-        {/* Background Snow Layer */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
           <PixelSnow 
             color="#10b981"
@@ -49,8 +65,6 @@ function App() {
             variant="square"
           />
         </div>
-
-        {/* Foreground Content Layer */}
         <div style={{ ...centerStyle, position: 'relative', zIndex: 1 }}>
           <h1 style={{ fontWeight: 'bold', color: '#10b981', fontSize: '4.5rem', marginBottom: '5vh' }}>Vaultly</h1>
           <p style={{ color: '#fff', fontSize: '1rem', marginBottom: '10vh' }}>Simple planning, total control.</p>
@@ -65,6 +79,7 @@ function App() {
     );
   }
 
+  // Main App Tabs
   return (
     <div style={appContainerStyle}>
       <div style={mobileWrapperStyle}>
