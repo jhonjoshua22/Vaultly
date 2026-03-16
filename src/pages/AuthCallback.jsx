@@ -6,24 +6,21 @@ const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const finishLogin = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
-
-      // Check if profile exists
+      
       const { data: profile } = await supabase
         .from('profiles')
-        .select('*')
+        .select('first_name')
         .eq('id', session.user.id)
         .single();
 
-      if (profile) {
-        navigate('/home');
+      if (profile?.first_name) {
+        navigate('/');
       } else {
         navigate('/onboarding');
       }
-    };
-    finishLogin();
+    });
   }, [navigate]);
 
   return <div>Finalizing login...</div>;
