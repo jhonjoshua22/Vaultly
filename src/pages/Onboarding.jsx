@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import Stepper, { Step } from '../components/Stepper';
 
-const Onboarding = () => {
+const banks = ['bdo', 'eastwest', 'unionbank', 'bpi', 'metrobank', 'rcbc'];
+
+export default function Onboarding() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
@@ -11,37 +13,40 @@ const Onboarding = () => {
     last_name: '',
     age: '',
     daily_limit: 150,
-    // savings
-    gcash: 0,
-    cash: 0,
-    bdo_savings: 0,
-    unionbank_savings: 0,
-    eastwest_savings: 0,
-    metrobank_savings: 0,
-    rcbc_savings: 0,
-    bpi_savings: 0,
-    // credit
-    bdo_credit: 0,
-    unionbank_credit: 0,
-    eastwest_credit: 0,
-    metrobank_credit: 0,
-    rcbc_credit: 0,
-    bpi_credit: 0
+    savings: {
+      gcash: '',
+      bdo: '', eastwest: '', unionbank: '', bpi: '', metrobank: '', rcbc: ''
+    },
+    credit_cards: {
+      bdo: '', eastwest: '', unionbank: '', bpi: '', metrobank: '', rcbc: ''
+    }
   });
+
+  // helper to update nested state
+  const handleInputChange = (field, value) => {
+    setProfile({ ...profile, [field]: value });
+  };
+  const handleNestedChange = (type, key, value) => {
+    setProfile({
+      ...profile,
+      [type]: { ...profile[type], [key]: value }
+    });
+  };
 
   useEffect(() => {
     const checkProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return navigate('/');
+      if (!session) return navigate('/'); // no session → back to login
 
-      const { data: profiles, error } = await supabase
+      // check if profile exists
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single();
 
-      if (profiles && profiles.first_name) {
-        navigate('/home'); // already filled profile, redirect home
+      if (data) {
+        navigate('/home'); // already has profile → skip onboarding
       } else {
         setLoading(false);
       }
@@ -50,126 +55,137 @@ const Onboarding = () => {
     checkProfile();
   }, [navigate]);
 
-  const handleInputChange = (field, value) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async () => {
+  const handleSubmit = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) return navigate('/');
 
-    // Insert profile if not exists
-    await supabase.from('profiles').upsert({
-      id: session.user.id,
-      first_name: profile.first_name,
-      last_name: profile.last_name,
-      daily_limit: profile.daily_limit,
-      age: profile.age
-    });
+    try {
+      // insert profile
+      await supabase.from('profiles').insert({
+        id: session.user.id,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        daily_limit: profile.daily_limit
+      });
 
-    // Insert balances
-    await supabase.from('balances').upsert({
-      user_id: session.user.id,
-      gcash: profile.gcash,
-      cash: profile.cash,
-      bdo_savings: profile.bdo_savings,
-      unionbank_savings: profile.unionbank_savings,
-      eastwest_savings: profile.eastwest_savings,
-      metrobank_savings: profile.metrobank_savings,
-      rcbc_savings: profile.rcbc_savings,
-      bpi_savings: profile.bpi_savings,
-      bdo_credit: profile.bdo_credit,
-      unionbank_credit: profile.unionbank_credit,
-      eastwest_credit: profile.eastwest_credit,
-      metrobank_credit: profile.metrobank_credit,
-      rcbc_credit: profile.rcbc_credit,
-      bpi_credit: profile.bpi_credit
-    });
+      // insert balances
+      await supabase.from('balances').insert({
+        user_id: session.user.id,
+        gcash: profile.savings.gcash || 0,
+        bdo_savings: profile.savings.bdo || 0,
+        eastwest_savings: profile.savings.eastwest || 0,
+        unionbank_savings: profile.savings.unionbank || 0,
+        bpi_savings: profile.savings.bpi || 0,
+        metrobank_savings: profile.savings.metrobank || 0,
+        rcbc_savings: profile.savings.rcbc || 0,
+        bdo_credit: profile.credit_cards.bdo || 0,
+        eastwest_credit: profile.credit_cards.eastwest || 0,
+        unionbank_credit: profile.credit_cards.unionbank || 0,
+        bpi_credit: profile.credit_cards.bpi || 0,
+        metrobank_credit: profile.credit_cards.metrobank || 0,
+        rcbc_credit: profile.credit_cards.rcbc || 0
+      });
 
-    navigate('/home');
+      navigate('/home');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save onboarding info');
+    }
   };
 
-  if (loading) return <div style={centerStyle}>Loading...</div>;
+  if (loading) return <div style={{ color: '#fff', textAlign: 'center', marginTop: '20vh' }}>Loading...</div>;
 
   return (
-    <div style={{ ...centerStyle, padding: '1rem' }}>
-      <h1>Welcome! Let's set up your account</h1>
+    <div style={{ padding: '2rem', maxWidth: '500px', margin: '0 auto', color: '#fff' }}>
+      <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Welcome! Let’s set up your account</h1>
 
       <Stepper
         initialStep={1}
-        onFinalStepCompleted={handleSave}
         backButtonText="Previous"
         nextButtonText="Next"
+        onFinalStepCompleted={handleSubmit}
       >
         <Step>
           <h2>Basic Info</h2>
           <input
+            style={inputStyle}
             placeholder="First Name"
             value={profile.first_name}
-            onChange={e => handleInputChange('first_name', e.target.value)}
+            onChange={(e) => handleInputChange('first_name', e.target.value)}
           />
           <input
+            style={inputStyle}
             placeholder="Last Name"
             value={profile.last_name}
-            onChange={e => handleInputChange('last_name', e.target.value)}
+            onChange={(e) => handleInputChange('last_name', e.target.value)}
           />
           <input
-            type="number"
+            style={inputStyle}
             placeholder="Age"
+            type="number"
             value={profile.age}
-            onChange={e => handleInputChange('age', e.target.value)}
+            onChange={(e) => handleInputChange('age', e.target.value)}
           />
           <input
-            type="number"
+            style={inputStyle}
             placeholder="Daily Limit"
+            type="number"
             value={profile.daily_limit}
-            onChange={e => handleInputChange('daily_limit', e.target.value)}
+            onChange={(e) => handleInputChange('daily_limit', e.target.value)}
           />
         </Step>
 
         <Step>
-          <h2>Savings Accounts</h2>
-          {['gcash','cash','bdo_savings','unionbank_savings','eastwest_savings','metrobank_savings','rcbc_savings','bpi_savings'].map(key => (
+          <h2>Savings</h2>
+          <input
+            style={inputStyle}
+            placeholder="GCash"
+            type="number"
+            value={profile.savings.gcash}
+            onChange={(e) => handleNestedChange('savings', 'gcash', e.target.value)}
+          />
+          {banks.map(bank => (
             <input
-              key={key}
+              key={bank}
+              style={inputStyle}
+              placeholder={`${bank.toUpperCase()} Savings`}
               type="number"
-              placeholder={key.replace('_', ' ')}
-              value={profile[key]}
-              onChange={e => handleInputChange(key, e.target.value)}
+              value={profile.savings[bank]}
+              onChange={(e) => handleNestedChange('savings', bank, e.target.value)}
             />
           ))}
         </Step>
 
         <Step>
-          <h2>Credit Accounts</h2>
-          {['bdo_credit','unionbank_credit','eastwest_credit','metrobank_credit','rcbc_credit','bpi_credit'].map(key => (
+          <h2>Credit Cards</h2>
+          {banks.map(bank => (
             <input
-              key={key}
+              key={bank}
+              style={inputStyle}
+              placeholder={`${bank.toUpperCase()} Credit Card`}
               type="number"
-              placeholder={key.replace('_', ' ')}
-              value={profile[key]}
-              onChange={e => handleInputChange(key, e.target.value)}
+              value={profile.credit_cards[bank]}
+              onChange={(e) => handleNestedChange('credit_cards', bank, e.target.value)}
             />
           ))}
         </Step>
 
         <Step>
-          <h2>Finish Setup</h2>
-          <p>Click Complete to save your profile and start using the app!</p>
+          <h2>Finish</h2>
+          <p>Click “Complete” to save your info and start using the app!</p>
         </Step>
       </Stepper>
     </div>
   );
-};
+}
 
-export default Onboarding;
-
-/* Styles */
-const centerStyle = {
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontFamily: 'sans-serif'
+const inputStyle = {
+  width: '100%',
+  padding: '0.75rem',
+  marginBottom: '1rem',
+  borderRadius: '0.5rem',
+  border: '1px solid #555',
+  backgroundColor: '#111',
+  color: '#fff',
+  fontSize: '1rem'
 };
