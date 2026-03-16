@@ -8,8 +8,6 @@ import UserStats from "./UserStats";
 import AddSpendModal from "./AddSpendModal";
 import MoneyCredits from "./MoneyCredits";
 import AddMoneyModal from "./AddMoneyModal";
-import PixelSnow from '../components/PixelSnow/PixelSnow';
-
 
 // Helper outside component to prevent re-instantiation
 const getPHTDate = () => {
@@ -121,55 +119,41 @@ const Home = () => {
     if (!amount || !desc) return;
     const amountNum = Number(amount);
 
-    // 1. Insert into expenses
-    const { error: insertError } = await supabase.from("expenses").insert([
+    await supabase.from("expenses").insert([
       { amount: amountNum, description: desc, user_id: userId, payment_method: paymentMethod }
     ]);
-    if (insertError) { console.error("Insert Error:", insertError); return; }
 
-    // 2. Fetch current
-    const { data: current, error: fetchErr } = await supabase
+    const { data: currentBalance } = await supabase
       .from("balances")
       .select("*")
       .eq("user_id", userId)
       .single();
-
-    if (current) {
-      // 3. Define the update object mapping JS names to SQL columns
-      let updatePayload = {
-        gcash: Number(current.gcash),
-        cash: Number(current.cash),
-        bdo_savings: Number(current.bdo_savings),
-        bdo_credit: Number(current.bdo_credit),
-        eastwest_credit: Number(current.eastwest_credit),
-        updated_at: new Date().toISOString()
+    
+    if (currentBalance) {
+      const updated = {
+        gcash: Number(currentBalance.gcash),
+        cash: Number(currentBalance.cash),
+        bdoSavings: Number(currentBalance.bdo_savings),
+        bdoCredit: Number(currentBalance.bdo_credit),
+        eastwestCredit: Number(currentBalance.eastwest_credit),
       };
 
-      // 4. Apply Logic
-      if (paymentMethod === "gcash") updatePayload.gcash -= amountNum;
-      else if (paymentMethod === "cash") updatePayload.cash -= amountNum;
-      else if (paymentMethod === "bdoSavings") updatePayload.bdo_savings -= amountNum;
-      else if (paymentMethod === "bdoCredit") updatePayload.bdo_credit += amountNum;
-      else if (paymentMethod === "eastwestCredit") updatePayload.eastwest_credit += amountNum;
+      if (paymentMethod === "gcash") updated.gcash -= amountNum;
+      if (paymentMethod === "cash") updated.cash -= amountNum;
+      if (paymentMethod === "bdoSavings") updated.bdoSavings -= amountNum;
+      if (paymentMethod === "bdoCredit") updated.bdoCredit += amountNum;
+      if (paymentMethod === "eastwestCredit") updated.eastwestCredit += amountNum;
 
-      // 5. Update DB
-      const { error: updateErr } = await supabase
-        .from("balances")
-        .update(updatePayload)
-        .eq("user_id", userId);
+      await supabase.from("balances").update({
+        gcash: updated.gcash,
+        cash: updated.cash,
+        bdo_savings: updated.bdoSavings,
+        bdo_credit: updated.bdoCredit,
+        eastwest_credit: updated.eastwestCredit,
+        updated_at: new Date().toISOString()
+      }).eq("user_id", userId);
 
-      if (updateErr) {
-        console.error("Update failed:", updateErr);
-      } else {
-        // Update local state to match DB
-        setBalances({
-          gcash: updatePayload.gcash,
-          cash: updatePayload.cash,
-          bdoSavings: updatePayload.bdo_savings,
-          bdoCredit: updatePayload.bdo_credit,
-          eastwestCredit: updatePayload.eastwest_credit
-        });
-      }
+      setBalances(updated);
     }
 
     setAmount(""); setDesc(""); setShowAdd(false);
@@ -187,46 +171,22 @@ const Home = () => {
   if (loading) return <div style={loadingStyle}>Loading...</div>;
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', width: '100%' }}>
-      {/* Background Snow Layer */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        width: '100%', 
-        height: '100%', 
-        zIndex: 0,
-        pointerEvents: 'none' // Important: ensures clicks pass through to buttons
-      }}>
-        <PixelSnow 
-          color="#10b981"
-          flakeSize={0.01}
-          minFlakeSize={1.25}
-          pixelResolution={200}
-          speed={0.5} // Slightly slower for a subtle home background
-          density={0.1} // Lower density so it's not distracting
-          variant="square"
-        />
+    <div style={pageStyle}>
+      <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
+      <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
+        <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>Add Spend</button>
+        <button style={{ ...addBtn, marginTop: 0, background: "#3b82f6" }} onClick={() => setShowAddMoney(true)}>Add/Pay Money</button>
       </div>
 
-      {/* Foreground Content Layer */}
-      <div style={{ ...pageStyle, position: 'relative', zIndex: 1 }}>
-        <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
-        <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
-          <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>Add Spend</button>
-          <button style={{ ...addBtn, marginTop: 0, background: "#3b82f6" }} onClick={() => setShowAddMoney(true)}>Add/Pay Money</button>
-        </div>
-
-        <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}
-          filterDate={filterDate} setFilterDate={setFilterDate} fetchLogs={fetchLogs} />
-        
-        <FriendList friendsLogs={friendsLogs} />
-        
-        {showAdd && <AddSpendModal amount={amount} setAmount={setAmount} desc={desc} setDesc={setDesc} addSpend={addSpend} setShowAdd={setShowAdd} />}
-        {showAddMoney && <AddMoneyModal userId={userId} balances={balances} setBalances={setBalances} setShowAddMoney={setShowAddMoney} />}
-      </div>
+      <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}
+        filterDate={filterDate} setFilterDate={setFilterDate} fetchLogs={fetchLogs} />
+      
+      <FriendList friendsLogs={friendsLogs} />
+      
+      {showAdd && <AddSpendModal amount={amount} setAmount={setAmount} desc={desc} setDesc={setDesc} addSpend={addSpend} setShowAdd={setShowAdd} />}
+      {showAddMoney && <AddMoneyModal userId={userId} balances={balances} setBalances={setBalances} setShowAddMoney={setShowAddMoney} />}
     </div>
   );
 };
