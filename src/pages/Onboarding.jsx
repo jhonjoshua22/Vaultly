@@ -34,33 +34,30 @@ const Onboarding = ({ user, onComplete }) => {
   };
 
   return (
-    <Stepper
-  initialStep={3}
-  onStepChange={(step) => {
-    console.log(step);
-  }}
-  onFinalStepCompleted={() => console.log("All steps completed!")}
-  backButtonText="Previous"
-  nextButtonText="Next"
->
-  <Step>
-    <h2>Welcome to the React Bits stepper!</h2>
-    <p>Check out the next step!</p>
-  </Step>
-  <Step>
-    <h2>Step 2</h2>
-    <img style={{ height: '100px', width: '100%', objectFit: 'cover', objectPosition: 'center -70px', borderRadius: '15px', marginTop: '1em' }} src="https://www.purrfectcatgifts.co.uk/cdn/shop/collections/Funny_Cat_Cards_640x640.png?v=1663150894" />
-    <p>Custom step content!</p>
-  </Step>
-  <Step>
-    <h2>How about an input?</h2>
-    <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name?" />
-  </Step>
-  <Step>
-    <h2>Final Step</h2>
-    <p>You made it!</p>
-  </Step>
-</Stepper>
+        <Stepper onFinalStepCompleted={handleSubmit}>
+          {/* Step 1: Profile */}
+          <Step>
+            <h2 style={titleStyle}>Personal Info</h2>
+            <input placeholder="First Name" onChange={e => setProfile({...profile, first_name: e.target.value})} style={inputStyle} />
+            <input placeholder="Last Name" onChange={e => setProfile({...profile, last_name: e.target.value})} style={inputStyle} />
+            <input type="number" placeholder="Age" onChange={e => setProfile({...profile, age: e.target.value})} style={inputStyle} />
+            <input type="number" placeholder="Daily Limit" onChange={e => setProfile({...profile, daily_limit: e.target.value})} style={inputStyle} />
+          </Step>
+
+          {/* Step 2: Savings */}
+          <Step>
+            <h2 style={titleStyle}>Savings Accounts</h2>
+            <AccountAdder options={bankOptions} onAdd={(t, a) => setSavings([...savings, { type: t, amount: a }])} />
+            <ListDisplay items={savings} />
+          </Step>
+
+          {/* Step 3: Credit Cards */}
+          <Step>
+            <h2 style={titleStyle}>Credit Cards</h2>
+            <AccountAdder options={creditOptions} onAdd={(t, a) => setCards([...cards, { type: t, amount: a }])} />
+            <ListDisplay items={cards} />
+          </Step>
+        </Stepper>
   );
 };
 
@@ -90,6 +87,29 @@ const ListDisplay = ({ items }) => (
 );
 
 // Styles
+const containerStyle = {
+  minHeight: '100vh',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: '20px',
+  backgroundColor: '#f0fdf4' // soft green background
+};
+
+const formWrapperStyle = {
+  width: '100%',
+  maxWidth: '500px',
+  padding: '30px',
+  borderRadius: '16px',
+  backgroundColor: '#065f46', // dark green box
+  boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+};
+
+const titleStyle = {
+  color: '#d1fae5',
+  marginBottom: '20px',
+  textAlign: 'center'
+};
 
 const inputStyle = {
   display: 'block',
