@@ -11,14 +11,30 @@ const AuthCallback = () => {
       if (!session) return navigate('/');
 
       // Check profile
-      const { data: profile } = await supabase
+      let { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single();
 
-      if (!profile || !profile.first_name) {
-        navigate('/onboarding'); // New user -> onboarding
+      // If profile doesn't exist, create a blank one
+      if (!profile) {
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: session.user.id })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error(insertError);
+          return;
+        }
+        profile = newProfile;
+      }
+
+      // Navigate based on first_name
+      if (!profile.first_name || profile.first_name.trim() === '') {
+        navigate('/onboarding'); // New user
       } else {
         navigate('/home'); // Existing user
       }
