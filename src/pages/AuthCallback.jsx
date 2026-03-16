@@ -6,31 +6,15 @@ const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        // Check if user has a profile record
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
-
-        if (error || !data) {
-          // No profile found, redirect to onboarding
-          navigate('/onboarding');
-        } else {
-          // Profile exists, go home
-          navigate('/home');
-        }
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        // Just go to root, App.jsx will decide if Onboarding is needed
+        navigate('/');
       }
-    };
-
-    handleAuth();
+    });
   }, [navigate]);
 
-  return <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>Finalizing login...</div>;
+  return <div style={{ color: 'white', textAlign: 'center', marginTop: '50px', backgroundColor: '#000', minHeight: '100vh' }}>Finalizing login...</div>;
 };
 
 export default AuthCallback;

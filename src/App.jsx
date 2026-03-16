@@ -12,7 +12,7 @@ import Leo from './pages/Leo';
 import Planner from './pages/Planner';
 import Profile from './pages/Profile';
 import AuthCallback from './pages/AuthCallback';
-import Onboarding from './pages/Onboarding'; // Import the new page
+import Onboarding from './pages/Onboarding';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -20,44 +20,53 @@ function App() {
   const [activeTab, setActiveTab] = useState('Home');
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
+  // Function to check if profile exists
+  const checkProfile = async (user) => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (error || !data) {
+      setNeedsOnboarding(true);
+    } else {
+      setNeedsOnboarding(false);
+    }
+  };
+
   useEffect(() => {
-    const checkUserStatus = async () => {
+    const initSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
-
       if (session?.user) {
-        // Check if the profile exists in the database
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
-
-        // If no record exists, trigger onboarding
-        if (error || !data) {
-          setNeedsOnboarding(true);
-        }
+        await checkProfile(session.user);
       }
       setLoading(false);
     };
 
-    checkUserStatus();
+    initSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
-      if (!session) setNeedsOnboarding(false);
+      if (session?.user) {
+        await checkProfile(session.user);
+      } else {
+        setNeedsOnboarding(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // 1. Handle Auth Redirects
+  // 1. Handle Auth Redirects (Supabase specific callback)
   if (window.location.pathname === '/auth/callback') return <AuthCallback />;
   
   // 2. Loading State
   if (loading) return <div style={centerStyle}>Loading...</div>;
 
-  // 3. Unauthenticated State (Login Screen)
+  // 3. Unauthenticated State
   if (!session) {
     return (
       <div style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden', backgroundColor: '#000' }}>
@@ -67,7 +76,7 @@ function App() {
         <div style={{ ...centerStyle, position: 'relative', zIndex: 1 }}>
           <h1 style={{ fontWeight: 'bold', color: '#10b981', fontSize: '4.5rem', marginBottom: '5vh' }}>Vaultly</h1>
           <p style={{ color: '#fff', fontSize: '1rem', marginBottom: '10vh' }}>Simple planning, total control.</p>
-          <button onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })} style={loginBtn}>
+          <button onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/auth/callback' } })} style={loginBtn}>
             Login with Google
           </button>
         </div>
@@ -75,7 +84,7 @@ function App() {
     );
   }
 
-  // 4. Onboarding State (Intercepts main app if profile is missing)
+  // 4. Onboarding State (Priority view)
   if (needsOnboarding) {
     return (
       <div style={appContainerStyle}>
@@ -103,7 +112,6 @@ function App() {
   );
 }
 
-/* Styles unchanged */
 const centerStyle = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', fontFamily: 'sans-serif' };
 const appContainerStyle = { backgroundColor: '#000', minHeight: '100vh', display: 'flex', justifyContent: 'center', color: '#fff', fontFamily: 'sans-serif' };
 const mobileWrapperStyle = { width: '100%', maxWidth: '500px', backgroundColor: '#000', display: 'flex', flexDirection: 'column', position: 'relative', minHeight: '100vh' };
