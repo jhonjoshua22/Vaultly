@@ -12,7 +12,6 @@ import Leo from './pages/Leo';
 import Planner from './pages/Planner';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
-import AuthCallback from './pages/AuthCallback';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -20,10 +19,38 @@ function App() {
   const [activeTab, setActiveTab] = useState('Home');
 
   useEffect(() => {
+    const checkSession = async () => {
+      setLoading(true);
+
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+
+      if (session) {
+        // Check if profile exists
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!profile) {
+          window.location.href = '/onboarding';
+          return; // stop further rendering
+        }
+      }
+
+      setLoading(false);
+    };
+
+    checkSession();
+
+    // Listen for live auth changes
     const { data: subscription } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        setSession(session);
+
         if (session) {
-          // Check if profile exists
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
@@ -34,7 +61,6 @@ function App() {
             window.location.href = '/onboarding';
           }
         }
-        setSession(session);
       }
     );
 
@@ -45,16 +71,15 @@ function App() {
 
   const pathname = window.location.pathname;
 
-  // Auth Callback
-  if (pathname === '/auth/callback') return <AuthCallback />;
-
-  // Onboarding
-  if (pathname === '/onboarding') return (
-    <Onboarding 
-      user={session.user} 
-      onComplete={() => window.location.href = '/'} 
-    />
-  );
+  // Onboarding page
+  if (pathname === '/onboarding' && session) {
+    return (
+      <Onboarding
+        user={session.user}
+        onComplete={() => window.location.href = '/'}
+      />
+    );
+  }
 
   // Not logged in
   if (!session) {
