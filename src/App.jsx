@@ -20,17 +20,23 @@ function App() {
   const [activeTab, setActiveTab] = useState('Home');
 
   useEffect(() => {
-    const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setLoading(false);
-    };
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session) {
+          // Check if profile exists
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-    init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+          if (!profile) {
+            window.location.href = '/onboarding';
+          }
+        }
+        setSession(session);
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
