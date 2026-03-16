@@ -37,18 +37,28 @@ const Profile = () => {
       if (!file) return;
 
       const { data: { user } } = await supabase.auth.getUser();
-      const fileName = `${user.id}.png`; // Consistent naming
+      // Ensure the path is explicitly 'avatars/' + filename
+      const filePath = `avatars/${user.id}.png`; 
 
-      await supabase.storage.from('avatars').upload(fileName, file, { upsert: true });
-      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error("Upload error details:", uploadError);
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
       
-      // Add timestamp to force cache refresh
       const newUrl = `${data.publicUrl}?t=${new Date().getTime()}`;
       
       await supabase.from('profiles').update({ avatar_url: newUrl }).eq('id', user.id);
       setProfile({ ...profile, avatar_url: newUrl });
       setShowPhotoModal(false);
-    } catch (error) { alert('Upload failed'); } finally { setUploading(false); }
+    } catch (error) { 
+      alert('Upload failed: ' + error.message); 
+    } finally { setUploading(false); }
   };
 
   const removeAvatar = async () => {
