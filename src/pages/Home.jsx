@@ -121,41 +121,55 @@ const Home = () => {
     if (!amount || !desc) return;
     const amountNum = Number(amount);
 
-    await supabase.from("expenses").insert([
+    // 1. Insert into expenses
+    const { error: insertError } = await supabase.from("expenses").insert([
       { amount: amountNum, description: desc, user_id: userId, payment_method: paymentMethod }
     ]);
+    if (insertError) { console.error("Insert Error:", insertError); return; }
 
-    const { data: currentBalance } = await supabase
+    // 2. Fetch current
+    const { data: current, error: fetchErr } = await supabase
       .from("balances")
       .select("*")
       .eq("user_id", userId)
       .single();
-    
-    if (currentBalance) {
-      const updated = {
-        gcash: Number(currentBalance.gcash),
-        cash: Number(currentBalance.cash),
-        bdoSavings: Number(currentBalance.bdo_savings),
-        bdoCredit: Number(currentBalance.bdo_credit),
-        eastwestCredit: Number(currentBalance.eastwest_credit),
+
+    if (current) {
+      // 3. Define the update object mapping JS names to SQL columns
+      let updatePayload = {
+        gcash: Number(current.gcash),
+        cash: Number(current.cash),
+        bdo_savings: Number(current.bdo_savings),
+        bdo_credit: Number(current.bdo_credit),
+        eastwest_credit: Number(current.eastwest_credit),
+        updated_at: new Date().toISOString()
       };
 
-      if (paymentMethod === "gcash") updated.gcash -= amountNum;
-      if (paymentMethod === "cash") updated.cash -= amountNum;
-      if (paymentMethod === "bdoSavings") updated.bdoSavings -= amountNum;
-      if (paymentMethod === "bdoCredit") updated.bdoCredit += amountNum;
-      if (paymentMethod === "eastwestCredit") updated.eastwestCredit += amountNum;
+      // 4. Apply Logic
+      if (paymentMethod === "gcash") updatePayload.gcash -= amountNum;
+      else if (paymentMethod === "cash") updatePayload.cash -= amountNum;
+      else if (paymentMethod === "bdoSavings") updatePayload.bdo_savings -= amountNum;
+      else if (paymentMethod === "bdoCredit") updatePayload.bdo_credit += amountNum;
+      else if (paymentMethod === "eastwestCredit") updatePayload.eastwest_credit += amountNum;
 
-      await supabase.from("balances").update({
-        gcash: updated.gcash,
-        cash: updated.cash,
-        bdo_savings: updated.bdoSavings,
-        bdo_credit: updated.bdoCredit,
-        eastwest_credit: updated.eastwestCredit,
-        updated_at: new Date().toISOString()
-      }).eq("user_id", userId);
+      // 5. Update DB
+      const { error: updateErr } = await supabase
+        .from("balances")
+        .update(updatePayload)
+        .eq("user_id", userId);
 
-      setBalances(updated);
+      if (updateErr) {
+        console.error("Update failed:", updateErr);
+      } else {
+        // Update local state to match DB
+        setBalances({
+          gcash: updatePayload.gcash,
+          cash: updatePayload.cash,
+          bdoSavings: updatePayload.bdo_savings,
+          bdoCredit: updatePayload.bdo_credit,
+          eastwestCredit: updatePayload.eastwest_credit
+        });
+      }
     }
 
     setAmount(""); setDesc(""); setShowAdd(false);
