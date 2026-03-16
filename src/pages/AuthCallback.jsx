@@ -1,16 +1,36 @@
-import { useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase automatically handles the hash/code in the URL
-    // We just need to ensure the session is initialized
-    supabase.auth.getSession().then(() => {
-      navigate('/home'); // Redirect to your app's home screen
-    });
+    const finishLogin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return navigate("/"); // not logged in
+
+      const userId = session.user.id;
+
+      // Check if user has first_name in profiles
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("first_name")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error(error);
+      }
+
+      if (!data || !data.first_name) {
+        navigate("/onboarding");
+      } else {
+        navigate("/home");
+      }
+    };
+
+    finishLogin();
   }, [navigate]);
 
   return <div>Finalizing login...</div>;
