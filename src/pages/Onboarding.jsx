@@ -67,6 +67,7 @@ const ListDisplay = ({ items }) => (
     ))}
   </ul>
 );
+export default Onboarding;
 
 // Styles
 const containerStyle = { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', backgroundColor: '#000', color: '#fff' };
