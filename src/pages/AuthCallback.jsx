@@ -7,11 +7,14 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const finishLogin = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.exchangeCodeForSession();
 
-      if (data.session) {
-        navigate("/");
+      if (error) {
+        console.error(error);
+        return;
       }
+
+      navigate("/");
     };
 
     finishLogin();
