@@ -198,7 +198,13 @@ const Home = () => {
       {/* Foreground Content Layer */}
       <div style={{ ...pageStyle, position: 'relative', zIndex: 1 }}>
         <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
-        <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
+        
+        {/* Render only balances > 0 */}
+        <MoneyCredits 
+          balances={Object.fromEntries(Object.entries(balances).filter(([_, v]) => v > 0))} 
+          setBalances={setBalances} 
+          userId={userId} 
+        />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
           <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>Add Spend</button>
