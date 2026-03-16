@@ -33,9 +33,13 @@ const Onboarding = ({ user, onComplete }) => {
 
   return (
     <div style={containerStyle}>
-      <h2 style={{ alignSelf: 'flex-start' }}>Complete your details</h2>
+      {/* Vaultly Header */}
+      <div style={headerStyle}>
+        <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#10b981' }}>Vaultly</h1>
+      </div>
       
-      {/* Name row side-by-side */}
+      <h2 style={{ alignSelf: 'flex-start', margin: '0 0 20px 0' }}>Complete your details</h2>
+      
       <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
         <input 
           placeholder="First Name" 
@@ -66,7 +70,7 @@ const Onboarding = ({ user, onComplete }) => {
       />
       <ListDisplay items={savings} />
 
-      <h3>Credit Cards</h3>
+      <h3 style={{ marginTop: '20px' }}>Credit Cards</h3>
       <AccountAdder 
         options={creditOptions} 
         onAdd={(t, a) => setCards([...cards, { type: t, amount: a }])} 
@@ -83,8 +87,8 @@ const AccountAdder = ({ options, onAdd }) => {
   const [amount, setAmount] = useState('');
 
   return (
-    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-      <select onChange={e => setType(e.target.value)} style={selectStyle}>
+    <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+      <select onChange={e => setType(e.target.value)} style={{ ...selectStyle, flex: 1 }}>
         {options.map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
       </select>
       <input 
@@ -92,7 +96,7 @@ const AccountAdder = ({ options, onAdd }) => {
         placeholder="Amount" 
         value={amount} 
         onChange={e => setAmount(e.target.value)} 
-        style={inputStyle} 
+        style={{ ...inputStyle, flex: 1, margin: 0 }} 
       />
       <button onClick={() => { if(amount) { onAdd(type, amount); setAmount(''); } }} style={addBtn}>Add</button>
     </div>
@@ -100,7 +104,7 @@ const AccountAdder = ({ options, onAdd }) => {
 };
 
 const ListDisplay = ({ items }) => (
-  <ul style={{ listStyle: 'none', padding: 0, marginBottom: '20px' }}>
+  <ul style={{ listStyle: 'none', padding: 0, marginTop: '10px', width: '100%' }}>
     {items.map((item, i) => (
       <li key={i} style={{ color: '#10b981', margin: '5px 0' }}>
         {item.type.toUpperCase()}: ₱{item.amount}
@@ -109,30 +113,39 @@ const ListDisplay = ({ items }) => (
   </ul>
 );
 
-// Styles updated for left-alignment
+// Styles
 const containerStyle = { 
   minHeight: '100vh', 
   display: 'flex', 
   flexDirection: 'column', 
-  alignItems: 'flex-start', // Changed from center to flex-start
+  alignItems: 'flex-start', 
   padding: '2rem', 
   backgroundColor: '#000', 
   color: '#fff',
-  maxWidth: '500px', // Constrain width for better reading
-  margin: '0 auto'
+  maxWidth: '500px', 
+  margin: '0 auto',
+  boxSizing: 'border-box'
+};
+
+const headerStyle = {
+  marginBottom: '2rem',
+  borderBottom: '1px solid #222',
+  width: '100%',
+  paddingBottom: '1rem'
 };
 
 const inputStyle = { 
-  padding: '10px', 
+  padding: '12px', 
   margin: '5px 0', 
   borderRadius: '6px', 
   border: '1px solid #333', 
   background: '#1a1a1a', 
   color: '#fff',
-  width: '100%' 
+  width: '100%',
+  boxSizing: 'border-box' 
 };
 
-const selectStyle = { ...inputStyle, width: 'auto' };
+const selectStyle = { ...inputStyle, width: '100%' };
 
 const submitBtn = { 
   padding: '12px 24px', 
@@ -141,11 +154,12 @@ const submitBtn = {
   border: 'none', 
   fontWeight: 'bold', 
   cursor: 'pointer', 
-  marginTop: '20px' 
+  marginTop: '30px',
+  width: '100%'
 };
 
 const addBtn = { 
-  padding: '10px 15px', 
+  padding: '0 15px', 
   background: '#3b82f6', 
   color: '#fff', 
   border: 'none', 
