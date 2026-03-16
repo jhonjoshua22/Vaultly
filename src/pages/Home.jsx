@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Plus, Calendar } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 import ExpenseList from "./ExpenseList";
@@ -9,8 +10,11 @@ import MoneyCredits from "./MoneyCredits";
 import AddMoneyModal from "./AddMoneyModal";
 import PixelSnow from '../components/PixelSnow/PixelSnow';
 
+
+// Helper outside component to prevent re-instantiation
 const getPHTDate = () => {
   const now = new Date();
+  // UTC+8 offset in milliseconds
   const offset = 8 * 60 * 60 * 1000;
   const phtDate = new Date(now.getTime() + offset);
   return phtDate.toISOString().split("T")[0];
@@ -20,12 +24,17 @@ const Home = () => {
   const [logs, setLogs] = useState([]);
   const [friendsLogs, setFriendsLogs] = useState([]);
   const [profile, setProfile] = useState({ first_name: "User", dailyLimit: 150 });
-  // Initial state is empty to allow dynamic population
-  const [balances, setBalances] = useState({});
+  const [balances, setBalances] = useState({
+    gcash: 0,
+    cash: 0,
+    bdoSavings: 0,
+    bdoCredit: 0,
+    eastwestCredit: 0,
+  });
   
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filterDate, setFilterDate] = useState(getPHTDate());
+  const [filterDate, setFilterDate] = useState(getPHTDate()); // Corrected init
   const [showAdd, setShowAdd] = useState(false);
   const [showAddMoney, setShowAddMoney] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
@@ -35,7 +44,10 @@ const Home = () => {
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       setUserId(user.id);
       await fetchProfile(user.id);
       await fetchLogs(filterDate);
@@ -58,14 +70,17 @@ const Home = () => {
   };
 
   const fetchLogs = async (dateStr) => {
+    // Explicit ISO range for PHT
     const start = `${dateStr}T00:00:00.000+08:00`;
     const end = `${dateStr}T23:59:59.999+08:00`;
+
     const { data } = await supabase
       .from("expenses")
       .select("*")
       .gte("created_at", start)
       .lte("created_at", end)
       .order("created_at", { ascending: false });
+    
     setLogs(data || []);
   };
 
@@ -85,21 +100,20 @@ const Home = () => {
     }
   };
 
-  // DYNAMIC FETCH: Only stores entries where value > 0
   const fetchBalances = async (id) => {
     const { data } = await supabase
       .from("balances")
       .select("*")
       .eq("user_id", id)
       .single();
-    
     if (data) {
-      const { id: _id, user_id, updated_at, ...raw } = data;
-      // Filter out zero-value columns immediately
-      const active = Object.fromEntries(
-        Object.entries(raw).filter(([_, v]) => Number(v) > 0)
-      );
-      setBalances(active);
+      setBalances({
+        gcash: Number(data.gcash),
+        cash: Number(data.cash),
+        bdoSavings: Number(data.bdo_savings),
+        bdoCredit: Number(data.bdo_credit),
+        eastwestCredit: Number(data.eastwest_credit),
+      });
     }
   };
 
@@ -111,26 +125,37 @@ const Home = () => {
       { amount: amountNum, description: desc, user_id: userId, payment_method: paymentMethod }
     ]);
 
-    const { data: current } = await supabase
+    const { data: currentBalance } = await supabase
       .from("balances")
       .select("*")
       .eq("user_id", userId)
       .single();
     
-    if (current) {
-      const updated = { ...current };
-      if (updated.hasOwnProperty(paymentMethod)) {
-        updated[paymentMethod] = Number(updated[paymentMethod]) - amountNum;
-      }
+    if (currentBalance) {
+      const updated = {
+        gcash: Number(currentBalance.gcash),
+        cash: Number(currentBalance.cash),
+        bdoSavings: Number(currentBalance.bdo_savings),
+        bdoCredit: Number(currentBalance.bdo_credit),
+        eastwestCredit: Number(currentBalance.eastwest_credit),
+      };
 
-      const { id, user_id, updated_at, ...toSave } = updated;
-      await supabase.from("balances").update(toSave).eq("user_id", userId);
-      
-      // Update local state with filter
-      const active = Object.fromEntries(
-        Object.entries(toSave).filter(([_, v]) => Number(v) > 0)
-      );
-      setBalances(active);
+      if (paymentMethod === "gcash") updated.gcash -= amountNum;
+      if (paymentMethod === "cash") updated.cash -= amountNum;
+      if (paymentMethod === "bdoSavings") updated.bdoSavings -= amountNum;
+      if (paymentMethod === "bdoCredit") updated.bdoCredit += amountNum;
+      if (paymentMethod === "eastwestCredit") updated.eastwestCredit += amountNum;
+
+      await supabase.from("balances").update({
+        gcash: updated.gcash,
+        cash: updated.cash,
+        bdo_savings: updated.bdoSavings,
+        bdo_credit: updated.bdoCredit,
+        eastwest_credit: updated.eastwestCredit,
+        updated_at: new Date().toISOString()
+      }).eq("user_id", userId);
+
+      setBalances(updated);
     }
 
     setAmount(""); setDesc(""); setShowAdd(false);
@@ -149,14 +174,30 @@ const Home = () => {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', width: '100%' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }}>
-        <PixelSnow color="#10b981" flakeSize={0.01} minFlakeSize={1.25} pixelResolution={200} speed={0.5} density={0.1} variant="square" />
+      {/* Background Snow Layer */}
+      <div style={{ 
+        position: 'absolute', 
+        top: 0, 
+        left: 0, 
+        width: '100%', 
+        height: '100%', 
+        zIndex: 0,
+        pointerEvents: 'none' // Important: ensures clicks pass through to buttons
+      }}>
+        <PixelSnow 
+          color="#10b981"
+          flakeSize={0.01}
+          minFlakeSize={1.25}
+          pixelResolution={200}
+          speed={0.5} // Slightly slower for a subtle home background
+          density={0.1} // Lower density so it's not distracting
+          variant="square"
+        />
       </div>
 
+      {/* Foreground Content Layer */}
       <div style={{ ...pageStyle, position: 'relative', zIndex: 1 }}>
         <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
-        
-        {/* Now balances is already filtered */}
         <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
