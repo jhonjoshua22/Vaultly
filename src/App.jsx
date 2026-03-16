@@ -52,8 +52,8 @@ function App() {
 
         {/* Foreground Content Layer */}
         <div style={{ ...centerStyle, position: 'relative', zIndex: 1 }}>
-          <h1 style={{ color: '#10b981', fontSize: '4.5rem', marginBottom: '30px' }}>Vaultly</h1>
-          <p style={{ color: '#fff', marginBottom: '10vh' }}>Simple planning, total control.</p>
+          <h1 style={{ fontWeight: 'bold', color: '#10b981', fontSize: '4.5rem', marginBottom: '5vh' }}>Vaultly</h1>
+          <p style={{ color: '#fff', fontSize: '2.5rem', marginBottom: '10vh' }}>Simple planning, total control.</p>
           <button
             onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
             style={loginBtn}
