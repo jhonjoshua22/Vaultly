@@ -41,7 +41,6 @@
 .step-content-default {
   position: relative;
   overflow: hidden;
-  min-height: 200px; /* force content to show */
 }
 
 .step-default {
