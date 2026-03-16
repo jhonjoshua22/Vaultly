@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Calendar } from "lucide-react";
+import { Plus, Calendar, Wallet, CreditCard, TrendingDown } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 import ExpenseList from "./ExpenseList";
@@ -9,7 +9,6 @@ import AddSpendModal from "./AddSpendModal";
 import MoneyCredits from "./MoneyCredits";
 import AddMoneyModal from "./AddMoneyModal";
 import PixelSnow from '../components/PixelSnow/PixelSnow';
-
 
 // Helper outside component to prevent re-instantiation
 const getPHTDate = () => {
@@ -34,7 +33,7 @@ const Home = () => {
   
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filterDate, setFilterDate] = useState(getPHTDate()); // Corrected init
+  const [filterDate, setFilterDate] = useState(getPHTDate());
   const [showAdd, setShowAdd] = useState(false);
   const [showAddMoney, setShowAddMoney] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
@@ -70,7 +69,6 @@ const Home = () => {
   };
 
   const fetchLogs = async (dateStr) => {
-    // Explicit ISO range for PHT
     const start = `${dateStr}T00:00:00.000+08:00`;
     const end = `${dateStr}T23:59:59.999+08:00`;
 
@@ -174,7 +172,6 @@ const Home = () => {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', width: '100%' }}>
-      {/* Background Snow Layer */}
       <div style={{ 
         position: 'absolute', 
         top: 0, 
@@ -182,27 +179,36 @@ const Home = () => {
         width: '100%', 
         height: '100%', 
         zIndex: 0,
-        pointerEvents: 'none' // Important: ensures clicks pass through to buttons
+        pointerEvents: 'none'
       }}>
         <PixelSnow 
           color="#10b981"
           flakeSize={0.01}
           minFlakeSize={1.25}
           pixelResolution={200}
-          speed={0.5} // Slightly slower for a subtle home background
-          density={0.1} // Lower density so it's not distracting
+          speed={0.5}
+          density={0.1}
           variant="square"
         />
       </div>
 
-      {/* Foreground Content Layer */}
       <div style={{ ...pageStyle, position: 'relative', zIndex: 1 }}>
         <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
         <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
-          <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>Add Spend</button>
-          <button style={{ ...addBtn, marginTop: 0, background: "#3b82f6" }} onClick={() => setShowAddMoney(true)}>Add/Pay Money</button>
+          <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>
+            <div style={btnContentStyle}>
+              <TrendingDown size={18} />
+              Add Spend
+            </div>
+          </button>
+          <button style={{ ...addBtn, marginTop: 0, background: "#3b82f6" }} onClick={() => setShowAddMoney(true)}>
+            <div style={btnContentStyle}>
+              <Wallet size={18} />
+              Add/Pay Money
+            </div>
+          </button>
         </div>
 
         <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}
@@ -220,5 +226,6 @@ const Home = () => {
 const pageStyle = { padding: 20, maxWidth: 600, margin: "auto", color: "white", paddingBottom: 120 };
 const loadingStyle = { padding: 50, textAlign: "center", color: "white" };
 const addBtn = { marginTop: 20, background: "#10b981", border: "none", color: "white", padding: "12px 20px", borderRadius: 12, width: "100%", fontWeight: "bold", cursor: "pointer" };
+const btnContentStyle = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' };
 
 export default Home;
