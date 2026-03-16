@@ -121,12 +121,10 @@ const Home = () => {
     if (!amount || !desc) return;
     const amountNum = Number(amount);
 
-    // 1. Insert expense
     await supabase.from("expenses").insert([
       { amount: amountNum, description: desc, user_id: userId, payment_method: paymentMethod }
     ]);
 
-    // 2. Fetch latest to ensure we aren't using stale state
     const { data: currentBalance } = await supabase
       .from("balances")
       .select("*")
@@ -134,8 +132,7 @@ const Home = () => {
       .single();
     
     if (currentBalance) {
-      // Create a working copy using current DB values
-      let updated = {
+      const updated = {
         gcash: Number(currentBalance.gcash),
         cash: Number(currentBalance.cash),
         bdoSavings: Number(currentBalance.bdo_savings),
@@ -143,19 +140,17 @@ const Home = () => {
         eastwestCredit: Number(currentBalance.eastwest_credit),
       };
 
-      // Apply logic
       if (paymentMethod === "gcash") updated.gcash -= amountNum;
       if (paymentMethod === "cash") updated.cash -= amountNum;
       if (paymentMethod === "bdoSavings") updated.bdoSavings -= amountNum;
       if (paymentMethod === "bdoCredit") updated.bdoCredit += amountNum;
       if (paymentMethod === "eastwestCredit") updated.eastwestCredit += amountNum;
 
-      // 3. Update DB with snake_case column names
       await supabase.from("balances").update({
         gcash: updated.gcash,
         cash: updated.cash,
-        bdo_savings: updated.bdoSavings,    // <--- MATCHES TABLE
-        bdo_credit: updated.bdoCredit,      // <--- MATCHES TABLE
+        bdo_savings: updated.bdoSavings,
+        bdo_credit: updated.bdoCredit,
         eastwest_credit: updated.eastwestCredit,
         updated_at: new Date().toISOString()
       }).eq("user_id", userId);
