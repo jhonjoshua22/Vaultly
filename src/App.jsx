@@ -12,64 +12,34 @@ import Leo from './pages/Leo';
 import Planner from './pages/Planner';
 import Profile from './pages/Profile';
 import AuthCallback from './pages/AuthCallback';
-import Onboarding from "./pages/Onboarding";
 
 function App() {
-
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [activeTab, setActiveTab] = useState('Home');
 
   useEffect(() => {
-
-    const initialize = async () => {
-
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-
-      if (session) {
-
-        const userId = session.user.id;
-
-        const { data: balance } = await supabase
-          .from("balances")
-          .select("id")
-          .eq("user_id", userId)
-          .single();
-
-        if (!balance) {
-          setNeedsOnboarding(true);
-        }
-
-      }
-
       setLoading(false);
-    };
+    });
 
-    initialize();
-
-    const { data: { subscription } } =
-      supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
-      });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
     return () => subscription.unsubscribe();
-
   }, []);
 
   if (window.location.pathname === '/auth/callback') return <AuthCallback />;
-
   if (loading) return <div style={centerStyle}>Loading...</div>;
 
-  // 🔹 USER NOT LOGGED IN
   if (!session) {
-
     return (
       <div style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden', backgroundColor: '#000' }}>
-
+        {/* Background Snow Layer */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-          <PixelSnow
+          <PixelSnow 
             color="#10b981"
             flakeSize={0.01}
             minFlakeSize={1.25}
@@ -80,55 +50,38 @@ function App() {
           />
         </div>
 
+        {/* Foreground Content Layer */}
         <div style={{ ...centerStyle, position: 'relative', zIndex: 1 }}>
-          <h1 style={{ fontWeight: 'bold', color: '#10b981', fontSize: '4.5rem', marginBottom: '5vh' }}>
-            Vaultly
-          </h1>
-
-          <p style={{ color: '#fff', fontSize: '1rem', marginBottom: '10vh' }}>
-            Simple planning, total control.
-          </p>
-
+          <h1 style={{ fontWeight: 'bold', color: '#10b981', fontSize: '4.5rem', marginBottom: '5vh' }}>Vaultly</h1>
+          <p style={{ color: '#fff', fontSize: '1rem', marginBottom: '10vh' }}>Simple planning, total control.</p>
           <button
             onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
             style={loginBtn}
           >
             Login with Google
           </button>
-
         </div>
       </div>
     );
   }
 
-  // 🔹 FIRST TIME USER → SHOW ONBOARDING
-  if (needsOnboarding) {
-    return <Onboarding onComplete={() => setNeedsOnboarding(false)} />;
-  }
-
-  // 🔹 NORMAL APP
   return (
     <div style={appContainerStyle}>
       <div style={mobileWrapperStyle}>
-
         <Topbar />
-
         <main style={{ flex: 1, position: 'relative', overflowY: 'auto' }}>
           <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}><Home /></div>
           <div style={{ display: activeTab === 'Leo' ? 'block' : 'none' }}><Leo /></div>
           <div style={{ display: activeTab === 'Planner' ? 'block' : 'none' }}><Planner /></div>
           <div style={{ display: activeTab === 'Profile' ? 'block' : 'none' }}><Profile /></div>
         </main>
-
         <Bottombar activeTab={activeTab} setActiveTab={setActiveTab} />
-
       </div>
     </div>
   );
 }
 
 /* Styles */
-
 const centerStyle = {
   minHeight: '100vh',
   display: 'flex',
