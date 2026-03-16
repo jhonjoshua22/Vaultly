@@ -17,29 +17,26 @@ const Onboarding = ({ user, onComplete }) => {
         ...savings.reduce((acc, curr) => ({ ...acc, [`${curr.type}_savings`]: curr.amount }), {}),
         ...cards.reduce((acc, curr) => ({ ...acc, [`${curr.type}_credit`]: curr.amount }), {})
       };
-
       await supabase.from('profiles').upsert({ id: user.id, ...profile });
       await supabase.from('balances').upsert(formattedBalances);
       onComplete();
-    } catch (err) {
-      console.error("Error saving onboarding data:", err);
-    }
+    } catch (err) { console.error("Error saving:", err); }
   };
 
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        <Stepper onFinalStepCompleted={handleSubmit} nextButtonText="Next" backButtonText="Back">
+        <Stepper onFinalStepCompleted={handleSubmit} nextButtonText="Continue">
           <Step>
             <h2 style={headingStyle}>Personal Info</h2>
-            <input placeholder="First Name" onChange={e => setProfile({ ...profile, first_name: e.target.value })} style={inputStyle} />
-            <input placeholder="Last Name" onChange={e => setProfile({ ...profile, last_name: e.target.value })} style={inputStyle} />
-            <input type="number" placeholder="Age" onChange={e => setProfile({ ...profile, age: e.target.value })} style={inputStyle} />
-            <input type="number" placeholder="Daily Limit" onChange={e => setProfile({ ...profile, daily_limit: e.target.value })} style={inputStyle} />
+            <input placeholder="First Name" onChange={e => setProfile({...profile, first_name: e.target.value})} style={inputStyle} />
+            <input placeholder="Last Name" onChange={e => setProfile({...profile, last_name: e.target.value})} style={inputStyle} />
+            <input type="number" placeholder="Age" onChange={e => setProfile({...profile, age: e.target.value})} style={inputStyle} />
+            <input type="number" placeholder="Daily Limit" onChange={e => setProfile({...profile, daily_limit: e.target.value})} style={inputStyle} />
           </Step>
 
           <Step>
-            <h2 style={headingStyle}>Savings Accounts</h2>
+            <h2 style={headingStyle}>Savings</h2>
             <AccountAdder options={bankOptions} onAdd={(t, a) => setSavings([...savings, { type: t, amount: a }])} />
             <ListDisplay items={savings} />
           </Step>
@@ -58,77 +55,34 @@ const Onboarding = ({ user, onComplete }) => {
 const AccountAdder = ({ options, onAdd }) => {
   const [type, setType] = useState(options[0]);
   const [amount, setAmount] = useState('');
-
   return (
     <div style={adderWrapperStyle}>
-      <select value={type} onChange={e => setType(e.target.value)} style={inputStyle}>
+      <select value={type} onChange={e => setType(e.target.value)} style={selectStyle}>
         {options.map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
       </select>
       <input type="number" placeholder="Amount" value={amount} onChange={e => setAmount(e.target.value)} style={inputStyle} />
-      <button onClick={() => { if (amount) { onAdd(type, amount); setAmount(''); } }} style={addBtnStyle}>+ Add</button>
+      <button onClick={() => { if(amount) { onAdd(type, amount); setAmount(''); } }} style={addBtnStyle}>+ Add</button>
     </div>
   );
 };
 
 const ListDisplay = ({ items }) => (
-  <ul style={{ listStyle: 'none', padding: 0, marginTop: '10px', width: '100%' }}>
+  <ul style={{ listStyle: 'none', padding: 0, width: '100%' }}>
     {items.map((item, i) => (
-      <li key={i} style={{ color: '#10B981', margin: '5px 0', fontWeight: 500 }}>
+      <li key={i} style={{ color: '#10B981', padding: '10px', borderBottom: '1px solid #222', textAlign: 'center' }}>
         {item.type.toUpperCase()}: ₱{item.amount}
       </li>
     ))}
   </ul>
 );
 
-// ===== Styles =====
-const containerStyle = {
-  minHeight: '100vh',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  backgroundColor: '#0A0A0A',
-  padding: '20px'
-};
-
-const cardStyle = {
-  width: '100%',
-  maxWidth: '420px',
-  backgroundColor: '#121212',
-  borderRadius: '16px',
-  padding: '30px 20px',
-  boxShadow: '0 12px 24px rgba(0,0,0,0.6)',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  position: 'relative'
-};
-
+// ===== Styles synced with Home.jsx =====
+const containerStyle = { minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A0A0A', padding: '20px' };
+const cardStyle = { width: '100%', maxWidth: '420px', backgroundColor: '#121212', borderRadius: '16px', padding: '30px 20px', boxShadow: '0 12px 24px rgba(0,0,0,0.6)' };
 const headingStyle = { color: '#fff', fontSize: '1.5rem', marginBottom: '20px', textAlign: 'center' };
-
-const inputStyle = {
-  display: 'block',
-  width: '100%',
-  padding: '14px',
-  margin: '10px 0',
-  borderRadius: '10px',
-  border: '1px solid #333',
-  background: '#1f1f1f',
-  color: '#fff',
-  textAlign: 'center',
-  fontSize: '1rem'
-};
-
-const adderWrapperStyle = { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px', alignItems: 'center', width: '100%' };
-
-const addBtnStyle = {
-  padding: '12px 20px',
-  background: '#10B981',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '8px',
-  cursor: 'pointer',
-  fontWeight: 600,
-  width: '100%'
-};
+const inputStyle = { width: '100%', padding: '14px', margin: '8px 0', borderRadius: '12px', border: '1px solid #333', background: '#1f1f1f', color: '#fff', textAlign: 'center', fontSize: '1rem', boxSizing: 'border-box' };
+const selectStyle = { ...inputStyle, textAlignLast: 'center' };
+const adderWrapperStyle = { display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' };
+const addBtnStyle = { padding: '12px', background: '#10B981', color: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', width: '100%' };
 
 export default Onboarding;
