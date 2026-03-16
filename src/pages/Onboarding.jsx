@@ -5,139 +5,71 @@ const bankOptions = ['bdo', 'eastwest', 'unionbank', 'bpi', 'metrobank', 'rcbc',
 const creditOptions = ['bdo', 'eastwest', 'unionbank', 'bpi', 'metrobank', 'rcbc'];
 
 const Onboarding = ({ user, onComplete }) => {
-  const [profile, setProfile] = useState({
-    first_name: '',
-    last_name: '',
-    age: '',
-    daily_limit: 150
-  });
-
-  const [balances, setBalances] = useState({});
-  const [creditCards, setCreditCards] = useState({});
+  const [profile, setProfile] = useState({ first_name: '', last_name: '', age: '', daily_limit: 150 });
+  const [savings, setSavings] = useState([]); // Array of { type, amount }
+  const [cards, setCards] = useState([]);     // Array of { type, amount }
 
   const handleSubmit = async () => {
     try {
-      // Insert profile
-      await supabase.from('profiles').upsert({
-        id: user.id,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        daily_limit: profile.daily_limit
-      });
-
-      // Insert balances
-      await supabase.from('balances').upsert({
+      // Map arrays back to the column structure required by your DB
+      const formattedBalances = {
         user_id: user.id,
-        ...balances,
-        ...creditCards
-      });
+        ...savings.reduce((acc, curr) => ({ ...acc, [`${curr.type}_savings`]: curr.amount }), {}),
+        ...cards.reduce((acc, curr) => ({ ...acc, [`${curr.type}_credit`]: curr.amount }), {})
+      };
 
+      await supabase.from('profiles').upsert({ id: user.id, ...profile });
+      await supabase.from('balances').upsert(formattedBalances);
       onComplete();
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   return (
     <div style={containerStyle}>
       <h2>Complete your details</h2>
-
-      <input
-        type="text"
-        placeholder="First Name"
-        value={profile.first_name}
-        onChange={e => setProfile({ ...profile, first_name: e.target.value })}
-        style={inputStyle}
-      />
-      <input
-        type="text"
-        placeholder="Last Name"
-        value={profile.last_name}
-        onChange={e => setProfile({ ...profile, last_name: e.target.value })}
-        style={inputStyle}
-      />
-      <input
-        type="number"
-        placeholder="Age"
-        value={profile.age}
-        onChange={e => setProfile({ ...profile, age: e.target.value })}
-        style={inputStyle}
-      />
-      <input
-        type="number"
-        placeholder="Daily Limit"
-        value={profile.daily_limit}
-        onChange={e => setProfile({ ...profile, daily_limit: e.target.value })}
-        style={inputStyle}
-      />
-
-      <h3>Savings</h3>
-      {bankOptions.map(bank => (
-        <div key={bank} style={bankRowStyle}>
-          <label>
-            {bank.toUpperCase()}:
-            <input
-              type="number"
-              value={balances[`${bank}_savings`] || ''}
-              onChange={e =>
-                setBalances({ ...balances, [`${bank}_savings`]: e.target.value })
-              }
-              style={inputStyle}
-            />
-          </label>
-        </div>
-      ))}
+      <input placeholder="First Name" onChange={e => setProfile({...profile, first_name: e.target.value})} style={inputStyle} />
+      <input placeholder="Last Name" onChange={e => setProfile({...profile, last_name: e.target.value})} style={inputStyle} />
+      
+      <h3>Savings Accounts</h3>
+      <AccountAdder options={bankOptions} onAdd={(t, a) => setSavings([...savings, { type: t, amount: a }])} />
+      <ListDisplay items={savings} />
 
       <h3>Credit Cards</h3>
-      {creditOptions.map(card => (
-        <div key={card} style={bankRowStyle}>
-          <label>
-            {card.toUpperCase()}:
-            <input
-              type="number"
-              value={creditCards[`${card}_credit`] || ''}
-              onChange={e =>
-                setCreditCards({ ...creditCards, [`${card}_credit`]: e.target.value })
-              }
-              style={inputStyle}
-            />
-          </label>
-        </div>
-      ))}
+      <AccountAdder options={creditOptions} onAdd={(t, a) => setCards([...cards, { type: t, amount: a }])} />
+      <ListDisplay items={cards} />
 
       <button onClick={handleSubmit} style={submitBtn}>Complete Onboarding</button>
     </div>
   );
 };
 
-const containerStyle = {
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: '#fff',
-  fontFamily: 'sans-serif',
-  padding: '2rem'
+// Component to Select and Add
+const AccountAdder = ({ options, onAdd }) => {
+  const [type, setType] = useState(options[0]);
+  const [amount, setAmount] = useState('');
+
+  return (
+    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <select onChange={e => setType(e.target.value)} style={inputStyle}>
+        {options.map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
+      </select>
+      <input type="number" placeholder="Amount" value={amount} onChange={e => setAmount(e.target.value)} style={inputStyle} />
+      <button onClick={() => { if(amount) { onAdd(type, amount); setAmount(''); } }} style={addBtn}>+ Add</button>
+    </div>
+  );
 };
 
-const inputStyle = {
-  padding: '0.5rem',
-  margin: '0.5rem 0',
-  width: '200px',
-  borderRadius: '6px',
-  border: '1px solid #ccc'
-};
+// Component to Display the added list
+const ListDisplay = ({ items }) => (
+  <ul style={{ listStyle: 'none', padding: 0 }}>
+    {items.map((item, i) => (
+      <li key={i} style={{ color: '#10b981', margin: '5px 0' }}>{item.type.toUpperCase()}: ₱{item.amount}</li>
+    ))}
+  </ul>
+);
 
-const bankRowStyle = { marginBottom: '1rem' };
-
-const submitBtn = {
-  padding: '10px 20px',
-  borderRadius: '8px',
-  background: '#10b981',
-  border: 'none',
-  fontWeight: 'bold',
-  cursor: 'pointer'
-};
-
-export default Onboarding;
+// Styles
+const containerStyle = { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', backgroundColor: '#000', color: '#fff' };
+const inputStyle = { padding: '10px', margin: '5px', borderRadius: '6px', border: '1px solid #333', background: '#1a1a1a', color: '#fff' };
+const submitBtn = { padding: '12px 24px', borderRadius: '8px', background: '#10b981', border: 'none', fontWeight: 'bold', cursor: 'pointer', marginTop: '20px' };
+const addBtn = { padding: '10px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' };
