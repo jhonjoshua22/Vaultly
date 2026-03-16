@@ -20,16 +20,17 @@ function App() {
   const [activeTab, setActiveTab] = useState('Home');
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
-  // Function to check if profile exists
   const checkProfile = async (user) => {
     if (!user) return;
+    
+    // Check if the profile exists
     const { data, error } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', user.id)
-      .single();
+      .maybeSingle(); // maybeSingle is safer than single() for 0 results
 
-    if (error || !data) {
+    if (!data) {
       setNeedsOnboarding(true);
     } else {
       setNeedsOnboarding(false);
@@ -37,9 +38,12 @@ function App() {
   };
 
   useEffect(() => {
+    // 1. Initial Session Check
     const initSession = async () => {
+      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
+      
       if (session?.user) {
         await checkProfile(session.user);
       }
@@ -48,19 +52,23 @@ function App() {
 
     initSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // 2. Listen for Auth Changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
+      
       if (session?.user) {
+        // If they just signed in, check profile
         await checkProfile(session.user);
       } else {
         setNeedsOnboarding(false);
       }
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // 1. Handle Auth Redirects (Supabase specific callback)
+  // 1. Handle Auth Redirects
   if (window.location.pathname === '/auth/callback') return <AuthCallback />;
   
   // 2. Loading State
@@ -84,7 +92,8 @@ function App() {
     );
   }
 
-  // 4. Onboarding State (Priority view)
+  // 4. Onboarding State (Priority)
+  // CRITICAL: We render this IF session exists AND needsOnboarding is true
   if (needsOnboarding) {
     return (
       <div style={appContainerStyle}>
@@ -112,7 +121,7 @@ function App() {
   );
 }
 
-const centerStyle = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', fontFamily: 'sans-serif' };
+const centerStyle = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', fontFamily: 'sans-serif', color: '#fff' };
 const appContainerStyle = { backgroundColor: '#000', minHeight: '100vh', display: 'flex', justifyContent: 'center', color: '#fff', fontFamily: 'sans-serif' };
 const mobileWrapperStyle = { width: '100%', maxWidth: '500px', backgroundColor: '#000', display: 'flex', flexDirection: 'column', position: 'relative', minHeight: '100vh' };
 const loginBtn = { padding: '14px 28px', background: '#10b981', border: 'none', borderRadius: '12px', color: '#000', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' };

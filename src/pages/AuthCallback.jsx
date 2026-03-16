@@ -6,15 +6,21 @@ const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        // Just go to root, App.jsx will decide if Onboarding is needed
-        navigate('/');
-      }
-    });
+    const processAuth = async () => {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.hash);
+      // After code exchange, go to root. 
+      // App.jsx will see the new session and trigger checkProfile automatically.
+      navigate('/', { replace: true });
+    };
+
+    processAuth();
   }, [navigate]);
 
-  return <div style={{ color: 'white', textAlign: 'center', marginTop: '50px', backgroundColor: '#000', minHeight: '100vh' }}>Finalizing login...</div>;
+  return (
+    <div style={{ color: 'white', textAlign: 'center', paddingTop: '100px', backgroundColor: '#000', minHeight: '100vh' }}>
+      <h2 style={{ color: '#10b981' }}>Setting up your vault...</h2>
+    </div>
+  );
 };
 
 export default AuthCallback;
