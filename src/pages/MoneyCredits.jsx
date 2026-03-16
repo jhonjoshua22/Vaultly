@@ -109,6 +109,7 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
       {visibleCredits.length > 0 && (
         <>
           <p style={{...sectionTitle, marginTop:20, marginBottom:10}}>Credit Balance</p>
+
           <div style={creditGrid}>
             {visibleCredits.map(acc => (
               <div
@@ -151,15 +152,102 @@ const MoneyCredits = ({ balances, setBalances, userId }) => {
   );
 };
 
-const grid = { display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 };
-const creditGrid = { display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10 };
-const card = { padding:12, borderRadius:12, border:"1px solid #222", cursor:"pointer", backgroundSize:"cover", backgroundPosition:"center", aspectRatio:"1.5/1", display:"flex", flexDirection:"column", justifyContent:"center" };
-const totalCard = { marginTop:20, background:"#064e3b", padding:18, borderRadius:14, textAlign:"center", color:"#fff" };
-const cardTitle = { fontSize:"0.7rem", opacity:0.9, margin:0, fontWeight:"bold" };
-const sectionTitle = { fontSize:"0.8rem", opacity:0.6 };
-const overlay = { position:"fixed", top:0,left:0,right:0,bottom:0, background:"rgba(0,0,0,0.7)", display:"flex", justifyContent:"center", alignItems:"center", zIndex:1000 };
-const modal = { background:"#111", padding:24, borderRadius:16, width:"90%", maxWidth:300 };
-const input = { width:"100%", padding:12, marginTop:10, marginBottom:15, background:"#000", border:"1px solid #333", color:"white", borderRadius:8, boxSizing:"border-box", outline:"none" };
-const saveBtn = { background:"#10b981", border:"none", padding:12, width:"100%", borderRadius:8, color:"white", cursor:"pointer", fontWeight:"bold" };
+/* GRID FIXED */
+
+const grid = {
+  display:"grid",
+  gridTemplateColumns:"repeat(3, minmax(0,1fr))",
+  gap:10,
+  justifyContent:"center",
+  justifyItems:"center"
+};
+
+const creditGrid = {
+  display:"grid",
+  gridTemplateColumns:"repeat(3, minmax(0,1fr))",
+  gap:10,
+  justifyContent:"center",
+  justifyItems:"center"
+};
+
+const card = {
+  width:"100%",
+  padding:12,
+  borderRadius:12,
+  border:"1px solid #222",
+  cursor:"pointer",
+  backgroundSize:"cover",
+  backgroundPosition:"center",
+  aspectRatio:"1.5/1",
+  display:"flex",
+  flexDirection:"column",
+  justifyContent:"center"
+};
+
+const totalCard = {
+  marginTop:20,
+  background:"#064e3b",
+  padding:18,
+  borderRadius:14,
+  textAlign:"center",
+  color:"#fff"
+};
+
+const cardTitle = {
+  fontSize:"0.7rem",
+  opacity:0.9,
+  margin:0,
+  fontWeight:"bold"
+};
+
+const sectionTitle = {
+  fontSize:"0.8rem",
+  opacity:0.6
+};
+
+const overlay = {
+  position:"fixed",
+  top:0,
+  left:0,
+  right:0,
+  bottom:0,
+  background:"rgba(0,0,0,0.7)",
+  display:"flex",
+  justifyContent:"center",
+  alignItems:"center",
+  zIndex:1000
+};
+
+const modal = {
+  background:"#111",
+  padding:24,
+  borderRadius:16,
+  width:"90%",
+  maxWidth:300
+};
+
+const input = {
+  width:"100%",
+  padding:12,
+  marginTop:10,
+  marginBottom:15,
+  background:"#000",
+  border:"1px solid #333",
+  color:"white",
+  borderRadius:8,
+  boxSizing:"border-box",
+  outline:"none"
+};
+
+const saveBtn = {
+  background:"#10b981",
+  border:"none",
+  padding:12,
+  width:"100%",
+  borderRadius:8,
+  color:"white",
+  cursor:"pointer",
+  fontWeight:"bold"
+};
 
 export default MoneyCredits;
