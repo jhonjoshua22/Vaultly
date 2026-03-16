@@ -12,79 +12,52 @@ import Leo from './pages/Leo';
 import Planner from './pages/Planner';
 import Profile from './pages/Profile';
 import AuthCallback from './pages/AuthCallback';
-import Onboarding from './pages/Onboarding';
 
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Home');
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
-
-  const checkProfile = async (user) => {
-    if (!user) return;
-    
-    // Check if the profile exists
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle(); // maybeSingle is safer than single() for 0 results
-
-    if (!data) {
-      setNeedsOnboarding(true);
-    } else {
-      setNeedsOnboarding(false);
-    }
-  };
 
   useEffect(() => {
-    // 1. Initial Session Check
-    const initSession = async () => {
-      setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      
-      if (session?.user) {
-        await checkProfile(session.user);
-      }
       setLoading(false);
-    };
+    });
 
-    initSession();
-
-    // 2. Listen for Auth Changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      
-      if (session?.user) {
-        // If they just signed in, check profile
-        await checkProfile(session.user);
-      } else {
-        setNeedsOnboarding(false);
-      }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // 1. Handle Auth Redirects
   if (window.location.pathname === '/auth/callback') return <AuthCallback />;
-  
-  // 2. Loading State
   if (loading) return <div style={centerStyle}>Loading...</div>;
 
-  // 3. Unauthenticated State
   if (!session) {
     return (
       <div style={{ position: 'relative', width: '100%', minHeight: '100vh', overflow: 'hidden', backgroundColor: '#000' }}>
+        {/* Background Snow Layer */}
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-          <PixelSnow color="#10b981" flakeSize={0.01} minFlakeSize={1.25} pixelResolution={200} speed={1.0} density={0.2} variant="square" />
+          <PixelSnow 
+            color="#10b981"
+            flakeSize={0.01}
+            minFlakeSize={1.25}
+            pixelResolution={200}
+            speed={1.0}
+            density={0.2}
+            variant="square"
+          />
         </div>
+
+        {/* Foreground Content Layer */}
         <div style={{ ...centerStyle, position: 'relative', zIndex: 1 }}>
           <h1 style={{ fontWeight: 'bold', color: '#10b981', fontSize: '4.5rem', marginBottom: '5vh' }}>Vaultly</h1>
           <p style={{ color: '#fff', fontSize: '1rem', marginBottom: '10vh' }}>Simple planning, total control.</p>
-          <button onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/auth/callback' } })} style={loginBtn}>
+          <button
+            onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+            style={loginBtn}
+          >
             Login with Google
           </button>
         </div>
@@ -92,19 +65,6 @@ function App() {
     );
   }
 
-  // 4. Onboarding State (Priority)
-  // CRITICAL: We render this IF session exists AND needsOnboarding is true
-  if (needsOnboarding) {
-    return (
-      <div style={appContainerStyle}>
-        <div style={mobileWrapperStyle}>
-          <Onboarding onComplete={() => setNeedsOnboarding(false)} />
-        </div>
-      </div>
-    );
-  }
-
-  // 5. Main Authenticated App
   return (
     <div style={appContainerStyle}>
       <div style={mobileWrapperStyle}>
@@ -121,9 +81,44 @@ function App() {
   );
 }
 
-const centerStyle = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', fontFamily: 'sans-serif', color: '#fff' };
-const appContainerStyle = { backgroundColor: '#000', minHeight: '100vh', display: 'flex', justifyContent: 'center', color: '#fff', fontFamily: 'sans-serif' };
-const mobileWrapperStyle = { width: '100%', maxWidth: '500px', backgroundColor: '#000', display: 'flex', flexDirection: 'column', position: 'relative', minHeight: '100vh' };
-const loginBtn = { padding: '14px 28px', background: '#10b981', border: 'none', borderRadius: '12px', color: '#000', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' };
+/* Styles */
+const centerStyle = {
+  minHeight: '100vh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'column',
+  fontFamily: 'sans-serif'
+};
+
+const appContainerStyle = {
+  backgroundColor: '#000',
+  minHeight: '100vh',
+  display: 'flex',
+  justifyContent: 'center',
+  color: '#fff',
+  fontFamily: 'sans-serif',
+};
+
+const mobileWrapperStyle = {
+  width: '100%',
+  maxWidth: '500px',
+  backgroundColor: '#000',
+  display: 'flex',
+  flexDirection: 'column',
+  position: 'relative',
+  minHeight: '100vh'
+};
+
+const loginBtn = {
+  padding: '14px 28px',
+  background: '#10b981',
+  border: 'none',
+  borderRadius: '12px',
+  color: '#000',
+  fontWeight: 'bold',
+  fontSize: '1rem',
+  cursor: 'pointer'
+};
 
 export default App;
