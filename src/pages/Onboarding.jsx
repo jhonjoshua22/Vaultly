@@ -13,22 +13,18 @@ const Onboarding = ({ user, onComplete }) => {
     daily_limit: 150
   });
 
-  const [savings, setSavings] = useState([]); // List of { type, amount }
-  const [cards, setCards] = useState([]);     // List of { type, amount }
+  const [savings, setSavings] = useState([]);
+  const [cards, setCards] = useState([]);
 
   const handleSubmit = async () => {
     try {
-      // 1. Prepare Balances Object (Mapping array back to column names)
       const formattedBalances = {
         user_id: user.id,
         ...savings.reduce((acc, curr) => ({ ...acc, [`${curr.type}_savings`]: curr.amount }), {}),
         ...cards.reduce((acc, curr) => ({ ...acc, [`${curr.type}_credit`]: curr.amount }), {})
       };
 
-      // 2. Insert/Upsert Profile
       await supabase.from('profiles').upsert({ id: user.id, ...profile });
-
-      // 3. Insert/Upsert Balances
       await supabase.from('balances').upsert(formattedBalances);
 
       onComplete();
@@ -43,7 +39,7 @@ const Onboarding = ({ user, onComplete }) => {
         <Stepper onFinalStepCompleted={handleSubmit}>
           {/* Step 1: Profile */}
           <Step>
-            <h2>Personal Info</h2>
+            <h2 style={titleStyle}>Personal Info</h2>
             <input placeholder="First Name" onChange={e => setProfile({...profile, first_name: e.target.value})} style={inputStyle} />
             <input placeholder="Last Name" onChange={e => setProfile({...profile, last_name: e.target.value})} style={inputStyle} />
             <input type="number" placeholder="Age" onChange={e => setProfile({...profile, age: e.target.value})} style={inputStyle} />
@@ -52,14 +48,14 @@ const Onboarding = ({ user, onComplete }) => {
 
           {/* Step 2: Savings */}
           <Step>
-            <h2>Savings Accounts</h2>
+            <h2 style={titleStyle}>Savings Accounts</h2>
             <AccountAdder options={bankOptions} onAdd={(t, a) => setSavings([...savings, { type: t, amount: a }])} />
             <ListDisplay items={savings} />
           </Step>
 
           {/* Step 3: Credit Cards */}
           <Step>
-            <h2>Credit Cards</h2>
+            <h2 style={titleStyle}>Credit Cards</h2>
             <AccountAdder options={creditOptions} onAdd={(t, a) => setCards([...cards, { type: t, amount: a }])} />
             <ListDisplay items={cards} />
           </Step>
@@ -74,7 +70,7 @@ const AccountAdder = ({ options, onAdd }) => {
   const [amount, setAmount] = useState('');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '25px' }}>
       <select onChange={e => setType(e.target.value)} style={inputStyle}>
         {options.map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
       </select>
@@ -87,15 +83,59 @@ const AccountAdder = ({ options, onAdd }) => {
 const ListDisplay = ({ items }) => (
   <ul style={{ listStyle: 'none', padding: 0 }}>
     {items.map((item, i) => (
-      <li key={i} style={{ color: '#10b981', margin: '5px 0' }}>{item.type.toUpperCase()}: ₱{item.amount}</li>
+      <li key={i} style={{ color: '#10b981', margin: '6px 0', fontWeight: '500' }}>
+        {item.type.toUpperCase()}: ₱{item.amount}
+      </li>
     ))}
   </ul>
 );
 
 // Styles
-const containerStyle = { minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', backgroundColor: '#000' };
-const formWrapperStyle = { width: '100%', maxWidth: '400px' };
-const inputStyle = { display: 'block', width: '100%', padding: '12px', margin: '8px 0', borderRadius: '8px', border: '1px solid #333', background: '#1a1a1a', color: '#fff' };
-const addBtnStyle = { padding: '10px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' };
+const containerStyle = {
+  minHeight: '100vh',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: '20px',
+  backgroundColor: '#f0fdf4' // soft green background
+};
+
+const formWrapperStyle = {
+  width: '100%',
+  maxWidth: '500px',
+  padding: '30px',
+  borderRadius: '16px',
+  backgroundColor: '#065f46', // dark green box
+  boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+};
+
+const titleStyle = {
+  color: '#d1fae5',
+  marginBottom: '20px',
+  textAlign: 'center'
+};
+
+const inputStyle = {
+  display: 'block',
+  width: '100%',
+  padding: '14px',
+  margin: '10px 0',
+  borderRadius: '10px',
+  border: '1px solid #10b981',
+  backgroundColor: '#064e3b',
+  color: '#d1fae5',
+  fontSize: '16px'
+};
+
+const addBtnStyle = {
+  padding: '12px',
+  backgroundColor: '#10b981',
+  color: '#064e3b',
+  border: 'none',
+  borderRadius: '10px',
+  cursor: 'pointer',
+  fontWeight: '600',
+  fontSize: '16px'
+};
 
 export default Onboarding;
