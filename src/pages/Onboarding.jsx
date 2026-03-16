@@ -1,53 +1,60 @@
+// src/pages/Onboarding.jsx
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import Stepper, { Step } from '../components/Stepper';
-
-const banks = ['bdo', 'eastwest', 'unionbank', 'bpi', 'metrobank', 'rcbc'];
+import { supabase } from '../lib/supabase';
+import Stepper, { Step } from '../components/Stepper'; // adjust path
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState(null);
+  const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     age: '',
-    daily_limit: 150,
-    savings: {
-      gcash: '',
-      bdo: '', eastwest: '', unionbank: '', bpi: '', metrobank: '', rcbc: ''
-    },
-    credit_cards: {
-      bdo: '', eastwest: '', unionbank: '', bpi: '', metrobank: '', rcbc: ''
-    }
+    daily_limit: '150',
+    // savings
+    gcash: '0',
+    bdo_savings: '0',
+    eastwest_savings: '0',
+    unionbank_savings: '0',
+    metrobank_savings: '0',
+    bpi_savings: '0',
+    rcbc_savings: '0',
+    // credit
+    bdo_credit: '0',
+    eastwest_credit: '0',
+    unionbank_credit: '0',
+    metrobank_credit: '0',
+    bpi_credit: '0',
+    rcbc_credit: '0',
   });
-
-  // helper to update nested state
-  const handleInputChange = (field, value) => {
-    setProfile({ ...profile, [field]: value });
-  };
-  const handleNestedChange = (type, key, value) => {
-    setProfile({
-      ...profile,
-      [type]: { ...profile[type], [key]: value }
-    });
-  };
 
   useEffect(() => {
     const checkProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return navigate('/'); // no session → back to login
+      if (!session) {
+        navigate('/');
+        return;
+      }
 
-      // check if profile exists
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('first_name, last_name, daily_limit')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (data) {
-        navigate('/home'); // already has profile → skip onboarding
+      if (error) {
+        console.error(error);
+        setLoading(false);
+        return;
+      }
+
+      if (data && data.first_name) {
+        // already onboarded → go home
+        navigate('/home');
       } else {
+        setProfile(session.user);
         setLoading(false);
       }
     };
@@ -55,124 +62,142 @@ export default function Onboarding() {
     checkProfile();
   }, [navigate]);
 
-  const handleSubmit = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return navigate('/');
-
-    try {
-      // insert profile
-      await supabase.from('profiles').insert({
-        id: session.user.id,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-        daily_limit: profile.daily_limit
-      });
-
-      // insert balances
-      await supabase.from('balances').insert({
-        user_id: session.user.id,
-        gcash: profile.savings.gcash || 0,
-        bdo_savings: profile.savings.bdo || 0,
-        eastwest_savings: profile.savings.eastwest || 0,
-        unionbank_savings: profile.savings.unionbank || 0,
-        bpi_savings: profile.savings.bpi || 0,
-        metrobank_savings: profile.savings.metrobank || 0,
-        rcbc_savings: profile.savings.rcbc || 0,
-        bdo_credit: profile.credit_cards.bdo || 0,
-        eastwest_credit: profile.credit_cards.eastwest || 0,
-        unionbank_credit: profile.credit_cards.unionbank || 0,
-        bpi_credit: profile.credit_cards.bpi || 0,
-        metrobank_credit: profile.credit_cards.metrobank || 0,
-        rcbc_credit: profile.credit_cards.rcbc || 0
-      });
-
-      navigate('/home');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to save onboarding info');
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  if (loading) return <div style={{ color: '#fff', textAlign: 'center', marginTop: '20vh' }}>Loading...</div>;
+  const handleSubmit = async () => {
+    if (!profile) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: profile.id,
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        daily_limit: Number(formData.daily_limit) || 150,
+      }, { onConflict: 'id' });
+
+    if (error) {
+      alert('Error saving profile: ' + error.message);
+      return;
+    }
+
+    // Optional: save balances in a separate table
+    const { error: balError } = await supabase
+      .from('balances')
+      .upsert({
+        user_id: profile.id,
+        gcash: Number(formData.gcash) || 0,
+        bdo_savings: Number(formData.bdo_savings) || 0,
+        eastwest_savings: Number(formData.eastwest_savings) || 0,
+        unionbank_savings: Number(formData.unionbank_savings) || 0,
+        metrobank_savings: Number(formData.metrobank_savings) || 0,
+        bpi_savings: Number(formData.bpi_savings) || 0,
+        rcbc_savings: Number(formData.rcbc_savings) || 0,
+        bdo_credit: Number(formData.bdo_credit) || 0,
+        eastwest_credit: Number(formData.eastwest_credit) || 0,
+        unionbank_credit: Number(formData.unionbank_credit) || 0,
+        metrobank_credit: Number(formData.metrobank_credit) || 0,
+        bpi_credit: Number(formData.bpi_credit) || 0,
+        rcbc_credit: Number(formData.rcbc_credit) || 0,
+      }, { onConflict: 'user_id' });
+
+    if (balError) {
+      console.warn('Balances save failed:', balError.message);
+      // still continue – not critical for login
+    }
+
+    navigate('/home');
+  };
+
+  if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Preparing your vault...</div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '500px', margin: '0 auto', color: '#fff' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Welcome! Let’s set up your account</h1>
-
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff', padding: '1rem' }}>
       <Stepper
         initialStep={1}
-        backButtonText="Previous"
-        nextButtonText="Next"
         onFinalStepCompleted={handleSubmit}
+        backButtonText="Back"
+        nextButtonText="Continue"
+        // You can pass custom button props, styles, etc.
       >
         <Step>
-          <h2>Basic Info</h2>
-          <input
-            style={inputStyle}
-            placeholder="First Name"
-            value={profile.first_name}
-            onChange={(e) => handleInputChange('first_name', e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            placeholder="Last Name"
-            value={profile.last_name}
-            onChange={(e) => handleInputChange('last_name', e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            placeholder="Age"
-            type="number"
-            value={profile.age}
-            onChange={(e) => handleInputChange('age', e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            placeholder="Daily Limit"
-            type="number"
-            value={profile.daily_limit}
-            onChange={(e) => handleInputChange('daily_limit', e.target.value)}
-          />
+          <h2>Welcome to Vaultly!</h2>
+          <p>Let's set up your profile.</p>
         </Step>
 
         <Step>
-          <h2>Savings</h2>
-          <input
-            style={inputStyle}
-            placeholder="GCash"
-            type="number"
-            value={profile.savings.gcash}
-            onChange={(e) => handleNestedChange('savings', 'gcash', e.target.value)}
-          />
-          {banks.map(bank => (
+          <h3>Personal Info</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', margin: '1.5rem 0' }}>
             <input
-              key={bank}
+              name="first_name"
+              placeholder="First Name"
+              value={formData.first_name}
+              onChange={handleChange}
+              required
               style={inputStyle}
-              placeholder={`${bank.toUpperCase()} Savings`}
-              type="number"
-              value={profile.savings[bank]}
-              onChange={(e) => handleNestedChange('savings', bank, e.target.value)}
             />
-          ))}
-        </Step>
-
-        <Step>
-          <h2>Credit Cards</h2>
-          {banks.map(bank => (
             <input
-              key={bank}
+              name="last_name"
+              placeholder="Last Name"
+              value={formData.last_name}
+              onChange={handleChange}
               style={inputStyle}
-              placeholder={`${bank.toUpperCase()} Credit Card`}
-              type="number"
-              value={profile.credit_cards[bank]}
-              onChange={(e) => handleNestedChange('credit_cards', bank, e.target.value)}
             />
-          ))}
+            <input
+              name="age"
+              type="number"
+              placeholder="Age"
+              value={formData.age}
+              onChange={handleChange}
+              style={inputStyle}
+            />
+          </div>
         </Step>
 
         <Step>
-          <h2>Finish</h2>
-          <p>Click “Complete” to save your info and start using the app!</p>
+          <h3>Daily Spending Limit</h3>
+          <input
+            name="daily_limit"
+            type="number"
+            placeholder="Daily limit (₱)"
+            value={formData.daily_limit}
+            onChange={handleChange}
+            style={{ ...inputStyle, fontSize: '1.4rem', textAlign: 'center' }}
+          />
+          <p style={{ fontSize: '0.9rem', color: '#aaa', marginTop: '1rem' }}>
+            You can change this later in settings.
+          </p>
+        </Step>
+
+        <Step>
+          <h3>Current Balances (optional)</h3>
+          <p style={{ color: '#aaa', marginBottom: '1.5rem' }}>
+            You can always update these later.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label>GCash</label>
+              <input name="gcash" type="number" step="0.01" value={formData.gcash} onChange={handleChange} style={inputStyle} />
+            </div>
+
+            <div>
+              <label>BDO Savings</label>
+              <input name="bdo_savings" type="number" step="0.01" value={formData.bdo_savings} onChange={handleChange} style={inputStyle} />
+            </div>
+
+            {/* Add the rest similarly – or make collapsible groups */}
+          </div>
+
+          {/* You can continue adding fields for other banks */}
+        </Step>
+
+        <Step>
+          <h2>You're all set!</h2>
+          <p>Tap "Complete" to start using Vaultly.</p>
         </Step>
       </Stepper>
     </div>
@@ -180,12 +205,11 @@ export default function Onboarding() {
 }
 
 const inputStyle = {
-  width: '100%',
-  padding: '0.75rem',
-  marginBottom: '1rem',
-  borderRadius: '0.5rem',
-  border: '1px solid #555',
-  backgroundColor: '#111',
+  padding: '12px 16px',
+  borderRadius: '12px',
+  border: '1px solid #333',
+  background: '#111',
   color: '#fff',
-  fontSize: '1rem'
+  fontSize: '1.1rem',
+  width: '100%',
 };

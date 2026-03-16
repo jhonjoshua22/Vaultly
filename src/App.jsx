@@ -12,6 +12,7 @@ import Leo from './pages/Leo';
 import Planner from './pages/Planner';
 import Profile from './pages/Profile';
 import AuthCallback from './pages/AuthCallback';
+import Onboarding from './pages/Onboarding';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -32,6 +33,7 @@ function App() {
   }, []);
 
   if (window.location.pathname === '/auth/callback') return <AuthCallback />;
+  if (window.location.pathname === '/onboarding') return <Onboarding />;
   if (loading) return <div style={centerStyle}>Loading...</div>;
 
   if (!session) {
