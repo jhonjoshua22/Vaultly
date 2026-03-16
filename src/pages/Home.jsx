@@ -8,6 +8,8 @@ import UserStats from "./UserStats";
 import AddSpendModal from "./AddSpendModal";
 import MoneyCredits from "./MoneyCredits";
 import AddMoneyModal from "./AddMoneyModal";
+import PixelSnow from '../components/PixelSnow/PixelSnow';
+
 
 // Helper outside component to prevent re-instantiation
 const getPHTDate = () => {
@@ -171,22 +173,46 @@ const Home = () => {
   if (loading) return <div style={loadingStyle}>Loading...</div>;
 
   return (
-    <div style={pageStyle}>
-      <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
-      <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
-        <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>Add Spend</button>
-        <button style={{ ...addBtn, marginTop: 0, background: "#3b82f6" }} onClick={() => setShowAddMoney(true)}>Add/Pay Money</button>
+    <div style={{ position: 'relative', minHeight: '100vh', width: '100%' }}>
+      {/* Background Snow Layer */}
+      <div style={{ 
+        position: 'absolute', 
+        top: 0, 
+        left: 0, 
+        width: '100%', 
+        height: '100%', 
+        zIndex: 0,
+        pointerEvents: 'none' // Important: ensures clicks pass through to buttons
+      }}>
+        <PixelSnow 
+          color="#10b981"
+          flakeSize={0.01}
+          minFlakeSize={1.25}
+          pixelResolution={200}
+          speed={0.5} // Slightly slower for a subtle home background
+          density={0.1} // Lower density so it's not distracting
+          variant="square"
+        />
       </div>
 
-      <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}
-        filterDate={filterDate} setFilterDate={setFilterDate} fetchLogs={fetchLogs} />
-      
-      <FriendList friendsLogs={friendsLogs} />
-      
-      {showAdd && <AddSpendModal amount={amount} setAmount={setAmount} desc={desc} setDesc={setDesc} addSpend={addSpend} setShowAdd={setShowAdd} />}
-      {showAddMoney && <AddMoneyModal userId={userId} balances={balances} setBalances={setBalances} setShowAddMoney={setShowAddMoney} />}
+      {/* Foreground Content Layer */}
+      <div style={{ ...pageStyle, position: 'relative', zIndex: 1 }}>
+        <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
+        <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
+          <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>Add Spend</button>
+          <button style={{ ...addBtn, marginTop: 0, background: "#3b82f6" }} onClick={() => setShowAddMoney(true)}>Add/Pay Money</button>
+        </div>
+
+        <ExpenseList logs={logs} expandedId={expandedId} setExpandedId={setExpandedId} deleteLog={deleteLog}
+          filterDate={filterDate} setFilterDate={setFilterDate} fetchLogs={fetchLogs} />
+        
+        <FriendList friendsLogs={friendsLogs} />
+        
+        {showAdd && <AddSpendModal amount={amount} setAmount={setAmount} desc={desc} setDesc={setDesc} addSpend={addSpend} setShowAdd={setShowAdd} />}
+        {showAddMoney && <AddMoneyModal userId={userId} balances={balances} setBalances={setBalances} setShowAddMoney={setShowAddMoney} />}
+      </div>
     </div>
   );
 };
