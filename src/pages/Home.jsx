@@ -20,7 +20,7 @@ const Home = () => {
   const [logs, setLogs] = useState([]);
   const [friendsLogs, setFriendsLogs] = useState([]);
   const [profile, setProfile] = useState({ first_name: "User", dailyLimit: 150 });
-  // We initialize as an empty object; it will populate dynamically from DB
+  // Initial state is empty to allow dynamic population
   const [balances, setBalances] = useState({});
   
   const [userId, setUserId] = useState(null);
@@ -85,7 +85,7 @@ const Home = () => {
     }
   };
 
-  // FETCH DYNAMICALLY WITHOUT HARDCODING
+  // DYNAMIC FETCH: Only stores entries where value > 0
   const fetchBalances = async (id) => {
     const { data } = await supabase
       .from("balances")
@@ -94,9 +94,12 @@ const Home = () => {
       .single();
     
     if (data) {
-      // Exclude metadata/non-balance columns
-      const { id, user_id, updated_at, ...cleanBalances } = data;
-      setBalances(cleanBalances);
+      const { id: _id, user_id, updated_at, ...raw } = data;
+      // Filter out zero-value columns immediately
+      const active = Object.fromEntries(
+        Object.entries(raw).filter(([_, v]) => Number(v) > 0)
+      );
+      setBalances(active);
     }
   };
 
@@ -108,24 +111,26 @@ const Home = () => {
       { amount: amountNum, description: desc, user_id: userId, payment_method: paymentMethod }
     ]);
 
-    const { data: currentBalance } = await supabase
+    const { data: current } = await supabase
       .from("balances")
       .select("*")
       .eq("user_id", userId)
       .single();
     
-    if (currentBalance) {
-      // DYNAMIC UPDATE
-      const updated = { ...currentBalance };
-      
-      // Assuming paymentMethod matches the DB column names (e.g., 'gcash')
+    if (current) {
+      const updated = { ...current };
       if (updated.hasOwnProperty(paymentMethod)) {
         updated[paymentMethod] = Number(updated[paymentMethod]) - amountNum;
       }
 
-      const { id, user_id, updated_at, ...updateData } = updated;
-      await supabase.from("balances").update(updateData).eq("user_id", userId);
-      setBalances(updateData);
+      const { id, user_id, updated_at, ...toSave } = updated;
+      await supabase.from("balances").update(toSave).eq("user_id", userId);
+      
+      // Update local state with filter
+      const active = Object.fromEntries(
+        Object.entries(toSave).filter(([_, v]) => Number(v) > 0)
+      );
+      setBalances(active);
     }
 
     setAmount(""); setDesc(""); setShowAdd(false);
@@ -151,12 +156,8 @@ const Home = () => {
       <div style={{ ...pageStyle, position: 'relative', zIndex: 1 }}>
         <UserStats profile={profile} remaining={remaining} totalSpent={totalSpent} filterDate={filterDate} />
         
-        {/* Pass filtered dynamic object */}
-        <MoneyCredits 
-          balances={Object.fromEntries(Object.entries(balances).filter(([_, v]) => v > 0))} 
-          setBalances={setBalances} 
-          userId={userId} 
-        />
+        {/* Now balances is already filtered */}
+        <MoneyCredits balances={balances} setBalances={setBalances} userId={userId} />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 20 }}>
           <button style={{ ...addBtn, marginTop: 0 }} onClick={() => setShowAdd(true)}>Add Spend</button>
